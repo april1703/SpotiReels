@@ -1,0 +1,15 @@
+services:
+# the sql containers
+ user-sql:
+  container_name: user-sql
+  image: mysql:8.0
+  build: ./sql/users
+  env_file: ./sql/users/.env
+  ports: "3307:3306"
+  volumes:
+  - ./sql:/docker-entrypoint-initdb.d
+  - mysql_data:/var/lib/mysql
+  healthcheck:
+    test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+    timeout: 20s
+    retries: 5
