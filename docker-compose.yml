@@ -1,4 +1,26 @@
 services:
+# the main app
+ main-app:
+  container-name: SpotiReelsTagram
+  build: ./app/main
+  env_file: ./app/.env
+  volumes:
+  - ./app/main:/app/main
+  depends_on:
+    service-server:
+      condition: service_healthy
+
+# the server to process requests
+ service-server:
+  container-name: main-server
+  build: ./server/backend
+  env_file: ./server/.env
+  volumes:
+  - ./server/backend:/server/main/backend
+  depends_on:
+    user-sql:
+      condition: service_healthy
+
 # the sql containers
  user-sql:
   container_name: user-sql
