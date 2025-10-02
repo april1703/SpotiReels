@@ -22,4 +22,4 @@ services:
   build: ./server
   env_file: ./server/.env
   volumes:
-  - ./server/backend:/server/main/backend
+  - ./server:/server

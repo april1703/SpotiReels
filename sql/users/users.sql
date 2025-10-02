@@ -4,7 +4,7 @@ use users;
 
 CREATE TABLE users (
     username VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    password CHAR(32) NOT NULL,
     salt CHAR(12) NOT NULL,
     PRIMARY KEY (username)
 );
@@ -12,6 +12,7 @@ CREATE TABLE users (
 INSERT INTO users
 VALUES(
     "testuser",
-    "hashTBD",
+    -- password is "password"; pepper is "basicpepper123"; salt is "basicsalt123"
+    "4a3707d6f5ec1e2d4b7365220e4020f10d326c0ee432e774a89c9b94eabafd6f",
     "basicsalt123"
 )
