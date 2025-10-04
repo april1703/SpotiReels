@@ -3,15 +3,22 @@ services:
  mysql-users:
   container_name: users-sql
   image: mysql
-  build: ./sql/users
-  env_file: ./sql/users/.env
+  environment: 
+  - MYSQL_ROOT_PASSWORD=lakwdmoanwdoianksndakna
+  - MYSQL_ROOT_HOST=%
+  - MYSQL_USER=service-server
+  - MYSQL_PASSWORD=test-password
   ports: 
   - "3307:3306"
   volumes:
-  - ./sql:/docker-entrypoint-initdb.d
+  - ./sql/users:/docker-entrypoint-initdb.d/
+  networks:
+  - main-network
+
 
 # the main app
  main-app:
+  image: alpine
   build: ./app/main
   env_file: ./app/.env
   volumes:
@@ -21,5 +28,13 @@ services:
  service-server:
   build: ./server
   env_file: ./server/.env
-  volumes:
-  - ./server:/server
+  depends_on:
+  - mysql-users
+  networks:
+  - main-network
+  ports:
+  - "5002:5002"
+# Network setup
+networks:
+  main-network:
+    driver: bridge
