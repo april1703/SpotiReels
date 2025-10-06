@@ -1,0 +1,29 @@
+9/30/25 //DAY 1//
+
+built basically the skeleton. A way to login to my spotify and retrive a token that is used for spotify's API calls.
+- uses client_ID and client_SECRET credentials connected to my Spotify account
+- id and secret give access to a token
+- F*CK useAUTH.js that was a nightmare but ill really never have to look at it agaim
+- useAUTH.js was the way to retrieve the tokens and such. so complicated
+    - figured out how to retrieve token/code from URL 
+    - retrieves a access token used for making API calls
+    - refreshes token when expires by refreshing every second, thats why the page goes back to homescreen after pressing login
+    - basically super backend
+
+-------------------------------------------------------------------------------------------------------------------------------
+10/2/25 //DAY 2//
+*FINALLY FIXED ISSUE WHERE PAGE KEPT REFRESHING EVERY SECOND
+*got two screens, a login page, and then a homepage(which is the homepage)
+- homepage now has a persistent currently playing hotbar. 
+- the hotbar thing is called Player (Player.js).
+- Player currently doesn't have the ability to play songs pulled from a search, as I dont have a search bar yet.
+- Player can play, but pulls from what my spotify last played
+- didn't have to build a UI at all, Spotify kinda handled it.
+- handles playback; pause, play, skip, go back, and volume bar
+- also displays Song image and title and time and artist
+- box with song info ; links you directly to the same page but through Spotify
+- so this is basically a portal to Spotify Web
+- playing bar also came with ability to connect to external speakers???
+
+***NEXT // 49:15 ON VIDEO***
+------------------------------------------------------------------------------------
