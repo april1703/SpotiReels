@@ -1,6 +1,7 @@
 import { FaHome, FaSearch, FaBook, FaPlus, FaFilm } from "react-icons/fa"
 
 const Sidebar = () => {
+    const go = (path) => () => { window.location.pathname = path; };
     return (
         <div
             style={{
@@ -29,7 +30,7 @@ const Sidebar = () => {
                 }}
                 >
                     <button style={navButtonStyle}><FaHome />Home</button>
-                    <button style={navButtonStyle}><FaSearch/>Search</button>
+                    <button style={navButtonStyle} onClick={go("/search")}><FaSearch/>Search</button>
                     <button style={navButtonStyle}><FaBook/>Library</button>
                     <button style={navButtonStyle}><FaPlus/>Playlist</button>
                     <button style={navButtonStyle}><FaFilm />Reels</button>
