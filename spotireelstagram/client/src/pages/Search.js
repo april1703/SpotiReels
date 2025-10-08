@@ -1,6 +1,24 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { FaHome, FaSearch, FaBook, FaPlus, FaFilm } from "react-icons/fa";
 
 const TOKEN_KEYS = ["accessToken", "sr_accessToken", "spotifyAccessToken", "dev_spotify_token"];
+const DEV_TOKEN_URL = 'http://localhost:5051/api/dev-token';
+
+const navButtonStyle = {
+    backgroundColor: "transparent",
+    color: "white",
+    border: "none",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "10px 20px",
+    cursor: "pointer",
+    textAlign: "left",
+    width: "100%",
+    fontSize: "16px"
+};
+
+const go = (path) => () => { window.location.pathname = path; };
 
 function readStoredToken() {
   for (const k of TOKEN_KEYS) {
@@ -38,8 +56,26 @@ export default function Search() {
   }, []);
 
   useEffect(() => {
-    const t = readStoredToken();
-    if (t && t !== accessToken) setAccessToken(t);
+    (async () => {
+      const t = readStoredToken();
+      if (t && t !== accessToken) {
+        setAccessToken(t);
+        return;
+      }
+
+      try {
+        const r = await fetch(DEV_TOKEN_URL);
+        if (r.ok) {
+          const j = await r.json();
+          if (j?.access_token) {
+            localStorage.setItem('dev_spotify_token', j.access_token);
+            setAccessToken(j.access_token);
+          }
+        }
+      } catch (err) {
+        console.warn('Dev token fetch failed: ', err);
+      }
+    })();
   },[]);
 
   const debounce = (fn, ms = 350) => (...args) => {
@@ -139,6 +175,7 @@ export default function Search() {
   return (
     <div style={{ padding: 16 }}>
       <h2>Spotify Search</h2>
+      <button style={navButtonStyle} onClick={go("/Home")}><FaHome />Home</button>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
         <input
