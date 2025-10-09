@@ -3,7 +3,7 @@
 built basically the skeleton. A way to login to my spotify and retrive a token that is used for spotify's API calls.
 - uses client_ID and client_SECRET credentials connected to my Spotify account
 - id and secret give access to a token
-- F*CK useAUTH.js that was a nightmare but ill really never have to look at it agaim
+- useAUTH.js was a nightmare but ill really never have to look at it agaim
 - useAUTH.js was the way to retrieve the tokens and such. so complicated
     - figured out how to retrieve token/code from URL 
     - retrieves a access token used for making API calls
@@ -23,7 +23,17 @@ built basically the skeleton. A way to login to my spotify and retrive a token t
 - also displays Song image and title and time and artist
 - box with song info ; links you directly to the same page but through Spotify
 - so this is basically a portal to Spotify Web
-- playing bar also came with ability to connect to external speakers???
+- playing bar also came with ability to connect to external speakers??
 
-***NEXT // 49:15 ON VIDEO***
-------------------------------------------------------------------------------------
+------------------------------------------
+10/9/25
+
+IMPORTANT UPDATE: 
+changed navigation method between pages
+- now uses SPA navigation, which changes the URL without a full page reload so "App" updates the shown page.
+- logout button works by clearing all tokens in local storage, because when no token is loaded, it takes you to login page. (more realistic than just redirecting you to Login)
+- changed background of whole webpage globally by changing things in index.js
+- edited player display(background color, buttons colors, etc.)
+- altered search.js to fit my token logic, didn't change anything about its layout and functionality tho, just made sure variables lined up so it would all run.
+----------------------------------------------------
+
