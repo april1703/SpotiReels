@@ -1,40 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FaHome, FaSearch, FaBook, FaPlus, FaFilm } from "react-icons/fa";
 
-const TOKEN_KEYS = ["accessToken", "sr_accessToken", "spotifyAccessToken", "dev_spotify_token"];
-const DEV_TOKEN_URL = 'http://localhost:5051/api/dev-token';
-
-const navButtonStyle = {
-    backgroundColor: "transparent",
-    color: "white",
-    border: "none",
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    padding: "10px 20px",
-    cursor: "pointer",
-    textAlign: "left",
-    width: "100%",
-    fontSize: "16px"
-};
-
-const go = (path) => () => { window.location.pathname = path; };
+// SEARCH PAGE EXPLANATION
+// allows searching for tracks, artists, albums
+// uses Spotify Web API to fetch results
+// when a track is clicked, it calls setTrackUri and updates trackURI to the track chosen
+// that trackURI is stored in App.js and passed to Player.js to play the selected track
 
 function readStoredToken() {
-  for (const k of TOKEN_KEYS) {
-    const v = window.localStorage.getItem(k);
-    if (v) return v;
-  }
-  return "";
-  
+  return window.localStorage.getItem('accessToken') || ''
 }
 
-function readUrlToken() {
-  return new URLSearchParams(window.location.search).get("token") || "";
-}
-
-export default function Search() {
-  const [accessToken, setAccessToken] = useState(() => readUrlToken() || readStoredToken());
+export default function Search({ accessToken: propAccessToken, setTrackUri }) {
+  const [accessToken, setAccessToken] = useState(() => propAccessToken || readStoredToken());
 
   const [q, setQ] = useState("");
   const [type, setType] = useState("track,artist,album");
@@ -44,39 +21,15 @@ export default function Search() {
   const timer = useRef(null);
 
   useEffect(() => {
-    const urlToken = readUrlToken();
-    if (urlToken) {
-      localStorage.setItem('dev_spotify_token', urlToken);
-      setAccessToken(urlToken);
-
-      const url = new URL(window.location.href);
-      url.searchParams.delete('token');
-      window.history.replaceState({}, '', url.pathname + url.hash);
+    if (propAccessToken && propAccessToken !== accessToken) {
+      setAccessToken(propAccessToken);
+      try { window.localStorage.setItem('accessToken', propAccessToken) } catch (e) {}
+      return;
     }
-  }, []);
 
-  useEffect(() => {
-    (async () => {
-      const t = readStoredToken();
-      if (t && t !== accessToken) {
-        setAccessToken(t);
-        return;
-      }
-
-      try {
-        const r = await fetch(DEV_TOKEN_URL);
-        if (r.ok) {
-          const j = await r.json();
-          if (j?.access_token) {
-            localStorage.setItem('dev_spotify_token', j.access_token);
-            setAccessToken(j.access_token);
-          }
-        }
-      } catch (err) {
-        console.warn('Dev token fetch failed: ', err);
-      }
-    })();
-  },[]);
+    const t = readStoredToken();
+    if (t && t !== accessToken) setAccessToken(t);
+  }, [propAccessToken]);
 
   const debounce = (fn, ms = 350) => (...args) => {
     clearTimeout(timer.current);
@@ -137,6 +90,7 @@ export default function Search() {
           key: `track:${t.id}`,
           pill: "Track",
           img, title: t.name, subtitle: artists,
+          uri: `spotify:track:${t.id}`,
           href: `https://open.spotify.com/track/${t.id}`
         });
       }
@@ -175,7 +129,6 @@ export default function Search() {
   return (
     <div style={{ padding: 16 }}>
       <h2>Spotify Search</h2>
-      <button style={navButtonStyle} onClick={go("/Home")}><FaHome />Home</button>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
         <input
@@ -199,11 +152,11 @@ export default function Search() {
           <option value="">Any</option>
         </select>
         <button onClick={() => runSearch()}>Search</button>
-        <span style={{ color: "#777" }}>{status}</span>
+        <span style={{ color: "#000000ff" }}>{status}</span>
       </div>
 
       {!accessToken && (
-        <div style={{ marginBottom: 8, color: "#b00" }}>
+        <div style={{ marginBottom: 8, color: "rgba(0, 0, 0, 1)" }}>
             Not logged in - use the app's login first, then come back here.
         </div>
       )}
@@ -216,30 +169,29 @@ export default function Search() {
         }}
       >
         {items.length === 0 && status === "" && q && (
-          <div style={{ color: "#777" }}>No results.</div>
+          <div style={{ color: "#ffffffff" }}>No results.</div>
         )}
-        {items.map(({ key, pill, img, title, subtitle, href }) => (
-          <a
+        {items.map(({ key, pill, img, title, subtitle, href, uri }) => (
+          <div
             key={key}
-            href={href}
-            target="_blank" rel="noopener noreferrer"
+            onClick={() => { if (uri && setTrackUri) setTrackUri(uri); }}
             style={{
-              border: "1px solid #e5e5e5", borderRadius: 12, padding: 12,
-              display: "flex", gap: 12, textDecoration: "none", color: "inherit"
+              border: "1px solid #ffffffff", borderRadius: 12, padding: 12,
+              display: "flex", gap: 12, textDecoration: "none", color: "inherit", cursor: uri ? 'pointer' : 'auto'
             }}
           >
             <img
               alt=""
               src={img || ""}
               onError={(e) => { e.currentTarget.style.display = "none"; }}
-              style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", background: "#f3f3f3" }}
+              style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", background: "#ffffffff" }}
             />
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ display: "inline-block", padding: "2px 8px", fontSize: 12, borderRadius: 999, border: "1px solid #ccc" }}>{pill}</span>
+              <span style={{ display: "inline-block", padding: "2px 8px", fontSize: 12, borderRadius: 999, border: "1px solid #ffffffff" }}>{pill}</span>
               <div style={{ fontWeight: 600, lineHeight: 1.2 }} dangerouslySetInnerHTML={{__html: escapeHtml(title) }} />
-              <div style={{ color: "#555", fontSize: 13 }} dangerouslySetInnerHTML={{__html: escapeHtml(subtitle || "") }} />
+              <div style={{ color: "#ffffffff", fontSize: 13 }} dangerouslySetInnerHTML={{__html: escapeHtml(subtitle || "") }} />
             </div>
-          </a>
+          </div>
         ))}
       </div>
     </div>
