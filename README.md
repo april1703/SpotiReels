@@ -14,16 +14,24 @@ APIS USED: Web Playback SDK
 ***DOWNLOAD THESE DEPENDENCIES WITH THESE COMMANDS***
 
 (in client)
-npm i react-scripts[IF react-scripts DOESNT WORK, MAKE SURE under "dependencies" in src/package.json "react-scripts": "^0.0.0", is changed to "react-scripts": "^5.0.1", ]
+npm i react-scripts  [IF react-scripts DOESNT WORK, MAKE SURE under "dependencies" in src/package.json "react-scripts": "^0.0.0", is changed to "react-scripts": "^5.0.1", ]
 
 npm i bootstrap react-bootstrap
+
 npm i axios
+
 npm i spotify-web-api-node
+
 npm i react-spotify-web-playback
+
 ----------------------------------------------------------------
 (in server)
 npm i express spotify-web-api-node (installs express AND spotify web api library)
+
 npm i nodemon --save-dev
+
 npm i cors
+
 npm i body-parser
+
 ----------------------------------------------------------------
