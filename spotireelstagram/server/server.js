@@ -35,8 +35,8 @@ app.post('/auth/login', (req, res) => {
     const code = req.body.code;
     const spotifyApi = new SpotifyWebApi({
         redirectUri: 'http://127.0.0.1:3000/auth/callback',
-        clientId: '7afb559a15614764a95945b91a494a30',
-        clientSecret: '7a9946cc2c7b49689d67bcf0fe21ac24'
+        clientId: '', //put clientid here
+        clientSecret: '' //put clientsecret here
     })
 
     spotifyApi.authorizationCodeGrant(code).then(data => {
