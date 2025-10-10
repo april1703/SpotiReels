@@ -23,8 +23,7 @@ Remove-Item -Force package-lock.json
 
 npm install
 
-(ignore errors, just keep going)
-
+(ignore vulnerabilities warnings, just keep going)
 npm i bootstrap react-bootstrap
 
 npm i axios
