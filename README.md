@@ -16,6 +16,11 @@ APIS USED: Web Playback SDK
 (in client)
 npm i react-scripts  [IF react-scripts DOESNT WORK, MAKE SURE under "dependencies" in src/package.json "react-scripts": "^0.0.0", is changed to "react-scripts": "^5.0.1", ]
 
+if it still doesn't work, do this in terminal (in client folder)
+Remove-Item -Force package-lock.json
+
+npm install
+
 npm i bootstrap react-bootstrap
 
 npm i axios
