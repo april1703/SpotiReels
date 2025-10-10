@@ -1,0 +1,46 @@
+services:
+# the sql containers
+ mysql-users:
+  container_name: users-sql
+  image: mysql
+  environment: 
+  - MYSQL_ROOT_PASSWORD=lakwdmoanwdoianksndakna
+  - MYSQL_ROOT_HOST=%
+  - MYSQL_USER=service-server
+  - MYSQL_PASSWORD=test-password
+  ports: 
+  - "3307:3306"
+  volumes:
+  - ./sql:/docker-entrypoint-initdb.d/
+
+ service-server:
+  build: ./spotireelstagram/server
+  env_file: ./spotireelstagram/server/.env
+  depends_on:
+  - mysql-users
+  ports:
+  - "3001:3001"
+  volumes:
+  - ./spotireelstagram/server:/server
+  - /server/node_modules
+
+# the main app
+ main-app:
+  build: ./spotireelstagram/client
+  env_file: ./spotireelstagram/client/.env
+  depends_on:
+  - mysql-users
+  - service-server
+  ports:
+  - "3000:3000"
+  volumes:
+  - ./spotireelstagram/client:/app
+  - /app/node_modules
+
+# the server to process requests
+
+
+# # Network setup
+# networks:
+#   main-network:
+#     driver: bridge
