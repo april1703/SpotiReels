@@ -6,10 +6,11 @@ import Search from './pages/Search';
 import Sidebar from './Sidebar';
 import Player from './Player';
 import useAuth from './useAuth';
+import Settings from './pages/Setting';
 
 //APP.JS EXPLANATION
 // main kinda global app component
-// handles routing between Login, Home, and Search pages
+// handles routing between Login, Home, Settings, and Search pages
 // trackURI's state is stored here (so it can get passed to the player for trackURI (song) data)
 // manages access token and track URI state
 // passes access token to Player component to enable music playback
@@ -37,6 +38,7 @@ export default function App() {
 
   let Content = null;
   if (path === '/search') Content = <Search accessToken={accessToken} setTrackUri={setTrackUri} />;
+  else if (path === '/settings') Content = <Settings />
   else Content = <Home code={code} accessToken={accessToken} setTrackUri={setTrackUri} />;
 
   return (

@@ -7,7 +7,7 @@ import { FaSpotify } from "react-icons/fa"
 //redirects to login page.
 
 //put your client id after where it says client_id and in between &
-const AUTH_URL = "https://accounts.spotify.com/authorize?client_id=&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state"
+const AUTH_URL = "https://accounts.spotify.com/authorize?client_id=dc8739cb5461422bbf58930a7251a7c5&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state"
 
 export default function Login() {
   return (
