@@ -36,8 +36,8 @@ app.post('/auth/refresh', (req, res) => {
     const refreshToken = req.body.refreshToken
     const spotifyApi = new SpotifyWebApi({
         redirectUri: 'http://127.0.0.1:3000/auth/callback',
-        clientId: '', //put your client id here
-        clientSecret: '', //put your client secret here
+        clientId: 'e9d0314470b945a4a27c5c708b06b775', //put your client id here
+        clientSecret: '139bb072fba243d0a849744143a5539d', //put your client secret here
         refreshToken,
     })
 
@@ -60,8 +60,8 @@ app.post('/auth/login', (req, res) => {
     const code = req.body.code;
     const spotifyApi = new SpotifyWebApi({
         redirectUri: 'http://127.0.0.1:3000/auth/callback',
-        clientId: '',
-        clientSecret: ''
+        clientId: 'e9d0314470b945a4a27c5c708b06b775',
+        clientSecret: '139bb072fba243d0a849744143a5539d'
     })
 
     spotifyApi.authorizationCodeGrant(code).then(data => {
@@ -110,6 +110,34 @@ app.post("/register", (request, result) => {
 });
 
 app.post("/register", (request, result) => {
+    let {usernameInput, passwordInput} = request.body;
+    if (UserPasswordREGEX.test(usernameInput) || UserPasswordREGEX.test(passwordInput)) {
+        return result.status(400).send(new Error("Invalid characters in username or password"));
+    }
+    UserConnection.query(ExistingUserSQLCheck, [usernameInput], (SQLerror, SQLresults) =>{
+        if (SQLerror) {
+            return result.status(500).send(new Error(`Database error: ${SQLerror.message}`));
+        }
+
+        if (SQLresults.length !== 0) {
+            return result.status(409).send(new Error('User already exists'));
+        }
+    })
+    let newSalt = crypto.randomBytes(Math.ceil(12 / 2))
+    .toString("hex")
+    .slice(0, 12);
+    bcrypt.hash(newSalt + passwordInput + PEPPER, 12)
+    .then(hashedPassword => {
+        UserConnection.query(UserRegistrationSQL, [usernameInput, hashedPassword, newSalt], (SQLerror, SQLresults) => {
+            if (SQLerror) {
+            return result.status(500).send(`Database error: ${SQLerror}`);
+            }
+            return result.status(200).send(`User ${usernameInput} successfully created.`);
+        })
+    });
+});
+
+app.post("/login", (request, result) => {
     let {usernameInput, passwordInput} = request.body;
     if (UserPasswordREGEX.test(usernameInput) || UserPasswordREGEX.test(passwordInput)) {
         return result.status(400).send("Invalid characters in username or password");
