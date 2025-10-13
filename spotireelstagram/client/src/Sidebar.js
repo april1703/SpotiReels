@@ -37,7 +37,7 @@ const Sidebar = () => {
                     <button style={navButtonStyle}><FaBook/>Library</button>
                     <button style={navButtonStyle}><FaPlus/>Playlist</button>
                     <button style={navButtonStyle}><FaFilm />Reels</button>
-                    <button style={navButtonStyle} onClick={go("/settings")}><FaCog />Settings</button>
+                    <button style={navButtonStyle} onClick={go("/settings")}<FaCog />Settings</button>
                 </div>
         </div>
     )
