@@ -11,36 +11,30 @@ services:
   ports: 
   - "3307:3306"
   volumes:
-  - ./sql:/docker-entrypoint-initdb.d/
+  - ./sql/users:/docker-entrypoint-initdb.d/
+  networks:
+  - main-network
 
- service-server:
-  build: ./spotireelstagram/server
-  env_file: ./spotireelstagram/server/.env
-  depends_on:
-  - mysql-users
-  ports:
-  - "3001:3001"
-  volumes:
-  - ./spotireelstagram/server:/server
-  - /server/node_modules
 
 # the main app
  main-app:
-  build: ./spotireelstagram/client
-  env_file: ./spotireelstagram/client/.env
-  depends_on:
-  - mysql-users
-  - service-server
-  ports:
-  - "3000:3000"
+  image: alpine
+  build: ./app/main
+  env_file: ./app/.env
   volumes:
-  - ./spotireelstagram/client:/app
-  - /app/node_modules
+  - ./app/main:/app/main
 
 # the server to process requests
-
-
-# # Network setup
-# networks:
-#   main-network:
-#     driver: bridge
+ service-server:
+  build: ./server
+  env_file: ./server/.env
+  depends_on:
+  - mysql-users
+  networks:
+  - main-network
+  ports:
+  - "5002:5002"
+# Network setup
+networks:
+  main-network:
+    driver: bridge

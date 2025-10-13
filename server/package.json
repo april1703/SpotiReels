@@ -1,0 +1,24 @@
+{
+  "name": "backend-server",
+  "version": "1.0.0",
+  "description": "The backend server for SpotiReels",
+  "main": "index.js",
+  "scripts": {
+    "devStart": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "authors": ["Sadie Ann", "April Gauthreaux", "Isaiah Hinds", "Sarah Wallen"],
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "mysql2": "^2.3.3",
+    "bcrypt": "^5.1.0",
+    "crypto": "^1.0.1",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "spotify-web-api-node": "^5.0.2"
+  }
+}
