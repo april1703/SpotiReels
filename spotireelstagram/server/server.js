@@ -11,6 +11,8 @@ const PEPPER = String(process.env.PEPPER);
 const SQL_HOST = String(process.env.MYSQL_HOST);
 const SQL_USER = String(process.env.MYSQL_USER);
 const SQL_PASSWORD = String(process.env.MYSQL_PASSWORD);
+const SPOTIFY_CLIENT_ID = String(process.env.SPOTIFY_CLIENT_ID);
+const SPOTIFY_SECRET = String(process.env.SPOTIFY_SECRET);
 
 const UserLoginSQL = "SELECT password, salt FROM users WHERE username = ?";
 const ExistingUserSQLCheck = "SELECT username FROM users WHERE username = ?";
@@ -36,8 +38,8 @@ app.post('/auth/refresh', (req, res) => {
     const refreshToken = req.body.refreshToken
     const spotifyApi = new SpotifyWebApi({
         redirectUri: 'http://127.0.0.1:3000/auth/callback',
-        clientId: 'e9d0314470b945a4a27c5c708b06b775', //put your client id here
-        clientSecret: '139bb072fba243d0a849744143a5539d', //put your client secret here
+        clientId: SPOTIFY_CLIENT_ID, //put your client id here
+        clientSecret: SPOTIFY_SECRET, //put your client secret here
         refreshToken,
     })
 
@@ -54,7 +56,6 @@ app.post('/auth/refresh', (req, res) => {
             res.sendStatus(400)
         })
     })
-        
 
 app.post('/auth/login', (req, res) => {
     const code = req.body.code;
