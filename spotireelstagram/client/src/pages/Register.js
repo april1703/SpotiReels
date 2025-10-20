@@ -1,6 +1,5 @@
 import { Container } from 'react-bootstrap'
 
-
 export default function Register() {
   return (
     <Container
@@ -36,19 +35,6 @@ export default function Register() {
             fontSize: "16px"
           }}
         />
-
-      <a href={AUTH_URL}
-         style={{
-          backgroundColor: "#8e2dd2ff",
-          color: "white",
-          padding: "10px 50px",
-          borderRadius: "5px",
-          textDecoration: "none",
-          fontSize: "18px",  
-         }}
-         >
-          Register
-      </a>
   </Container>
   )
 }
