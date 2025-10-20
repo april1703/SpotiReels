@@ -80,8 +80,15 @@ app.post('/auth/login', (req, res) => {
     })
 })
 
+
 app.listen(3001, () => {
     console.log('Server is running on port 3001');
+})
+
+app.get('/spotify-id', (request, response) => {
+    console.log("request for spotify id");
+    return response.status(200).json(SPOTIFY_CLIENT_ID).message("Local client ID given.");
+    
 })
 
 //REGISTRATION FUNCTION: takes 4 strings, returns network status and message

@@ -7,7 +7,20 @@ import { FaSpotify } from "react-icons/fa"
 //redirects to login page.
 
 //put your client id after where it says client_id and in between &
-const AUTH_URL = "https://accounts.spotify.com/authorize?client_id=&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state"
+async function getSpotifyId() {
+  try {
+    const res = await fetch("http://localhost:3001/spotify-id");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    console.log("Returned successfully:", data);
+    return data;
+  } catch (err) {
+    console.error("Network error:", err.message);
+  }
+}
+
+const SPOTIFY_ID = await getSpotifyId(); // if in top-level await context
+const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_ID}&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state`
 
 export default function Login() {
   const go = (path) => () => { 
