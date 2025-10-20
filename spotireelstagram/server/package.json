@@ -7,17 +7,21 @@
     "devStart": "nodemon server.js",
     "start": "node server.js"
   },
-  "authors": ["Sadie Ann", "April Gauthreaux", "Isaiah Hinds", "Sarah Wallen"],
-  "license":"ISC",
-
+  "authors": [
+    "Sadie Ann",
+    "April Gauthreaux",
+    "Isaiah Hinds",
+    "Sarah Wallen"
+  ],
+  "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.4.7",
-    "mysql2": "^2.3.3",
     "bcrypt": "^5.1.0",
-    "crypto": "^1.0.1",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.7",
     "express": "^5.1.0",
+    "mysql2": "^2.3.3",
     "spotify-web-api-node": "^5.0.2"
   },
   "devDependencies": {
