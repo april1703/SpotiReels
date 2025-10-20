@@ -6,7 +6,7 @@ import Search from './pages/Search';
 import Sidebar from './Sidebar';
 import Player from './Player';
 import useAuth from './useAuth';
-import Settings from './pages/Setting';
+import Settings from './pages/Settings';
 
 //APP.JS EXPLANATION
 // main kinda global app component

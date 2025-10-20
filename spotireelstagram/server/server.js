@@ -209,7 +209,7 @@ app.post("/changeExplicit", (request, result) => {
 //REGEX CHECK: takes an array, returns a boolean
 const SQL_REGEX = /["':;(){}|\/\\]/;
 function checkRegex(listOfItems) {
-    for(i = 0; i < listOfItems.length(), i++){
+    for(i = 0; i < listOfItems.length(); i++) {
         if(SQL_REGEX.test(listOfItems[i])){
             return true;
         }
