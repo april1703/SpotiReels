@@ -81,7 +81,7 @@ export default function Login() {
          >
           Login
       </a>
-      <button onClick={go("/register")}
+  <button
       style={{background: "none", 
         border: "none",   
         margin: 0,      
@@ -89,7 +89,8 @@ export default function Login() {
         color: "#8e2dd2ff",  
         fontSize: "15px",   
         cursor: "pointer", 
-        textDecoration: "underline"}}>
+        textDecoration: "underline"}}
+        onClick={go("/register")}>
           Don't have an account? Register here!
         </button>
         

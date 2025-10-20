@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 import Player from './Player';
 import useAuth from './useAuth';
 import Settings from './pages/Settings';
+import Register from './pages/Register';
 
 //APP.JS EXPLANATION
 // main kinda global app component
@@ -38,7 +39,7 @@ export default function App() {
 
   let Content = null;
   if (path === '/search') Content = <Search accessToken={accessToken} setTrackUri={setTrackUri} />;
-  else if (path === '/settings') Content = <Settings />
+  else if (path === '/settings') Content = <Settings />;
   else Content = <Home code={code} accessToken={accessToken} setTrackUri={setTrackUri} />;
 
   return (
