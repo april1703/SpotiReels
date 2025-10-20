@@ -7,9 +7,13 @@ import { FaSpotify } from "react-icons/fa"
 //redirects to login page.
 
 //put your client id after where it says client_id and in between &
-const AUTH_URL = "https://accounts.spotify.com/authorize?client_id=" + String(process.env.SPOTIFY_CLIENT_ID) + "&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state"
+const AUTH_URL = "https://accounts.spotify.com/authorize?client_id=&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state"
 
 export default function Login() {
+  const go = (path) => () => { 
+        window.history.pushState({}, '', path);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+    };
   return (
     <Container
     fluid 
@@ -35,7 +39,7 @@ export default function Login() {
             marginBottom: "30px"
           }}
         >
-          SpotiReelsTagram
+          SpotiReels
         </h1>
       {/* Adding a two text boxes for username and password */}
 
@@ -77,6 +81,18 @@ export default function Login() {
          >
           Login
       </a>
+      <button onClick={go("/register")}
+      style={{background: "none", 
+        border: "none",   
+        margin: 0,      
+        padding: 0,     
+        color: "#8e2dd2ff",  
+        fontSize: "15px",   
+        cursor: "pointer", 
+        textDecoration: "underline"}}>
+          Don't have an account? Register here!
+        </button>
+        
       {/* Pulse animation */}
       <style>
         {`

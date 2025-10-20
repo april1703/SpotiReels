@@ -11,6 +11,18 @@ const defaultSettings = {
     autoplayPreview: true,
 };
 
+const logout = () => {
+try {
+    window.localStorage.removeItem('accessToken');
+    window.localStorage.removeItem('refreshToken');
+    window.localStorage.removeItem('dev_spotify_token');
+    window.localStorage.removeItem('sr_accessToken');
+} catch (e) {}
+// navigate to login/root and force reload to reset app state
+window.history.pushState({}, '', '/');
+window.location.reload();
+};
+
 function readSettings() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -66,6 +78,21 @@ export default function Settings() {
                     </p>
                 </Col>
             </Row>
+
+            <button
+            onClick={logout}
+            style={{
+              backgroundColor: "#8e2dd2ff",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              padding: "6px 12px",
+              cursor: "pointer",
+              fontSize: "14px"
+            }}
+            >
+                Logout
+            </button>
 
             {saved && (
                 <Row className="mb-3">
