@@ -19,9 +19,12 @@ services:
   - mysql-users
   ports:
   - "3001:3001"
+  environment:
+  - CHOKIDAR_USEPOLLING=true
+  - NODE_ENV=development
   volumes:
-  - ./spotireelstagram/server:/server
-  - /server/node_modules
+  - ./spotireelstagram/server:/app
+  - /app/node_modules
 
 # the main app
  client:
@@ -34,6 +37,11 @@ services:
   volumes:
   - ./spotireelstagram/client:/app
   - /app/node_modules
+  environment:
+  - CHOKIDAR_USEPOLLING=true
+  - WATCHPACK_POLLING=true
+  - NODE_ENV=development
+
 
 # the server to process requests
 
