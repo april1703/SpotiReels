@@ -180,6 +180,19 @@ app.post("/changepassword", (request, result) => {
     })
 })
 
+// CHANGE LIGHTING MODE: takes a boolean and string, returns network status and message
+app.post("/changeLightingMode", (request, response) => {
+    let {username, isLightingModeRequest} = request.body;
+    UserConnection.query(ChangeLightingModeSQL, [isLightingModeRequest, username], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return result.status(500).send(`Database error: ${SQLerror.message}`);
+        }
+        else {
+            return result.status(200).send(`Successfully changed lighting setting.`);
+        }
+    })
+}) 
+
 // CHANGE EXPLICIT: takes a boolean and string, returns network status and message
 app.post("/changeExplicit", (request, result) => {
     let {username, isExplicitRequest} = request.body;
@@ -187,7 +200,7 @@ app.post("/changeExplicit", (request, result) => {
         if (SQLerror) {
             return result.status(500).send(`Database error: ${SQLerror.message}`);
         } else {
-            return result.status(200).send(`Successfully changed settings.`);
+            return result.status(200).send(`Successfully changed explicit settings.`);
         }
     })
 })
