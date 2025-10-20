@@ -27,7 +27,6 @@ services:
 # the main app
  main-app:
   build: ./spotireelstagram/client
-  env_file: ./spotireelstagram/client/.env
   depends_on:
   - mysql-users
   - service-server

@@ -17,8 +17,7 @@
     "react-scripts": "^5.0.1",
     "react-spotify-web-playback": "^0.14.7",
     "spotify-web-api-node": "^5.0.2",
-    "web-vitals": "^2.1.4",
-    "dotenv":"17.2.3"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
