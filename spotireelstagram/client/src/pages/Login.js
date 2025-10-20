@@ -1,6 +1,6 @@
 import { Container } from 'react-bootstrap'
 import { FaSpotify } from "react-icons/fa"
-require("dotenv").config();
+
 
 //LOGIN PAGE EXPLAINED
 //creates an AUTH_URL with client ID, redirect URI, and a list of scopes (streaming, playback, library read/write, user read email/private)
