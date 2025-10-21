@@ -23,13 +23,14 @@ const UserRegistrationSQL = "INSERT INTO users (username, spotifyUsername, email
 const CheckInputPasswordSQL = "SELECT password, salt FROM users WHERE username = ?";
 const PasswordChangeSQL = "UPDATE users SET password = ?, salt = ? WHERE username = ?";
 const ChangeExplicitSQL = "UPDATE users SET isExplicit = ? WHERE username = ?";
+const AddFollowingSQL = "INSERT INTO following (username, user_following) VALUES (?, ?)"
 
 // SQL CONNECTION AND HEALTH CHECK
 const UserConnection = mysql.createConnection({
     host: SQL_HOST,
     user: SQL_USER,
     password: SQL_PASSWORD,
-    database: "users",
+    database: "account_information",
 });
 UserConnection.ping(err => {
   if (err) console.error("Ping failed:", err);
@@ -86,24 +87,24 @@ app.listen(3001, () => {
 })
 
 app.get('/spotify-id', (request, response) => {
-    console.log("request for spotify id");
-    return response.status(200).json(SPOTIFY_CLIENT_ID).message("Local client ID given.");
+    console.log("User requested Spotify ID");
+    return response.status(200).json(SPOTIFY_CLIENT_ID);
     
 })
 
 //REGISTRATION FUNCTION: takes 4 strings, returns network status and message
-app.post("/register", (request, result) => {
+app.post("/register", (request, response) => {
     let {username, spotifyusername, email, password} = request.body;
     if (regexCheck([username, spotifyusername, email, password])) {
-        return result.status(400).send(new Error("Invalid characters used."));
+        return response.status(403).send(new Error("Invalid characters used."));
     }
     UserConnection.query(ExistingUserSQLCheck, [username], (SQLerror, SQLresults) =>{
         if (SQLerror) {
-            return result.status(500).send(new Error(`Database error: ${SQLerror.message}`));
+            return response.status(500).send(new Error(`Database error: ${SQLerror.message}`));
         }
 
         if (SQLresults.length !== 0) {
-            return result.status(409).send(new Error('User already exists'));
+            return response.status(409).send(new Error('User already exists'));
         }
     })
     let newSalt = crypto.randomBytes(Math.ceil(12 / 2))
@@ -113,59 +114,59 @@ app.post("/register", (request, result) => {
     .then(hashedPassword => {
         UserConnection.query(UserRegistrationSQL, [username, spotifyusername, email, hashedPassword, newSalt], (SQLerror, SQLresults) => {
             if (SQLerror) {
-            return result.status(500).send(`Database error: ${SQLerror}`);
+            return response.status(500).send(`Database error: ${SQLerror}`);
             }
-            return result.status(200).send(`User ${username} successfully created.`);
+            return response.status(200).send(`User ${username} successfully created.`);
         })
     });
 });
 
 // LOGIN FUNCTION: takes 2 strings, returns network status and message
-app.post("/login", (request, result) => {
+app.post("/login", (request, response) => {
     let {username, password} = request.body;
     if (checkRegex([username, password])) {
-        return result.status(400).send("Invalid characters in username or password");
+        return response.status(403).send("Invalid characters in username or password");
     }
     UserConnection.query(CheckInputPasswordSQL, [username], (SQLerror, SQLresults) => {
         if (SQLerror) {
-            return result.status(500).send(`Database error: ${SQLerror.message}`);
+            return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
 
         if (SQLresults.length === 0) {
-            return result.status(404).send("User not found");
+            return response.status(404).send("User not found");
         }
         bcrypt.compare( SQLresults[0].salt + password + PEPPER, SQLresults[0].password)
         .then(isMatch => {
             if (isMatch) {
-                return result.status(200).send(`Password success; user ${username} logged in`);
+                return response.status(200).send(`Password success; user ${username} logged in`);
             } else {
-                return result.status(403).send("Incorrect password.");
+                return response.status(403).send("Incorrect password.");
             }
         })
         .catch(bCryptError => {
-            return result.status(500).send(`Encryption error: ${bCryptError.message}`);
+            return response.status(500).send(`Encryption error: ${bCryptError.message}`);
         });
     });
 });
 
 // CHANGE PASSWORD FUNCTION: takes 3 strings, returns network status and message
-app.post("/changepassword", (request, result) => {
+app.post("/changePassword", (request, response) => {
     let {username, currentPassword, proposedPassword} = request.body;
     if(checkRegex([username, currentPassword, proposedPassword])) {
-        return result.status(400).send("invalid characters in username or password");
+        return response.status(403).send("Invalid characters in request body: Access denied.");
     }
     UserConnection.query(CheckInputPasswordSQL, [username], (SQLerror, SQLresults) => {
         if (SQLerror) {
-            return result.status(500).send(`Database error: ${SQLerror.message}`);
+            return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
 
         if (SQLresults.length === 0) {
-            return result.status(404).send("User not found (Inaccessible content warning!)");
+            return response.status(404).send("User not found (Inaccessible content warning!)");
         }
         bcrypt.compare(SQLresults[0].salt + currentPassword + PEPPER, SQLresults[0].password)
         .then(isMatch => {
             if (!isMatch) {
-                return result.status(403).send("Incorrect current password. Access denied.");
+                return response.status(403).send("Incorrect current password. Access denied.");
             }
             else if (isMatch){
                 let newSalt = crypto.randomBytes(Math.ceil(12 / 2))
@@ -175,9 +176,9 @@ app.post("/changepassword", (request, result) => {
                 .then(hashedPassword => {
                     UserConnection.query(PasswordChangeSQL, [hashedPassword, newSalt, username], (SQLerror_2, SQLresults_2) => {
                         if (SQLerror_2) {
-                        return result.status(500).send(`Database error on second try: ${SQLerror}`);
+                        return response.status(500).send(`Database error on second try: ${SQLerror}`);
                         }
-                        return result.status(200).send(`Password for user ${username} successfully changed.`);
+                        return response.status(200).send(`Password for user ${username} successfully changed.`);
                     })
 
                 })
@@ -192,22 +193,72 @@ app.post("/changeLightingMode", (request, response) => {
     let {username, isLightingModeRequest} = request.body;
     UserConnection.query(ChangeLightingModeSQL, [isLightingModeRequest, username], (SQLerror, SQLresults) => {
         if (SQLerror) {
-            return result.status(500).send(`Database error: ${SQLerror.message}`);
+            return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
         else {
-            return result.status(200).send(`Successfully changed lighting setting.`);
+            return response.status(200).send(`Successfully changed lighting setting.`);
         }
     })
 }) 
 
 // CHANGE EXPLICIT: takes a boolean and string, returns network status and message
-app.post("/changeExplicit", (request, result) => {
+app.post("/changeExplicit", (request, response) => {
     let {username, isExplicitRequest} = request.body;
     UserConnection.query(ChangeExplicitSQL, [isExplicitRequest, username], (SQLerror, SQLresults) => {
         if (SQLerror) {
-            return result.status(500).send(`Database error: ${SQLerror.message}`);
+            return response.status(500).send(`Database error: ${SQLerror.message}`);
         } else {
-            return result.status(200).send(`Successfully changed explicit settings.`);
+            return response.status(200).send(`Successfully changed explicit settings.`);
+        }
+    })
+})
+
+// ADD FOLLOWING: takes two strings, returns network status and message
+app.post("/addFollowing", (request, response) => {
+    let {username, following_username} = request.body;
+    if(checkRegex([username, following_username])) {
+        return response.status(403).message("Invalid characters in request body: Access denied.");
+    }
+    UserConnection.query(AddFollowingSQL, [username, following_username], (SQLerror, SQLresults) => {
+        if (SQLerror.errno === 1062) {
+            return response.status(409).send(`User ${username} is already following ${following_username}.`);
+        } else if (SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`);
+        } else {
+            return response.status(200).send(`Successfully followed user ${following_username}`);
+        }
+    })
+    
+})
+
+//REMOVE FOLLOWING: takes two strings, returns network status and message
+app.post("/removeFollowing", (request, response) => {
+    let {username, following_username} = request.body;
+    if(checkRegex([username, following_username])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.");
+    }
+    UserConnection.query(RemoveFollowingSQL, [username, following_username], (SQLerror, SQLresults) => {
+        if(SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`);
+        } else {
+            return response.status(200).send(`User ${username} successfully unfollowed ${following_username}`);
+        }
+    })
+})
+
+// RETRIEVE FOLLOWING: takes a string, returns network status, a message, and, on 200, a JSON body
+app.post("/getFollowing", (request, response) => {
+    let {username} = request.body;
+    if(checkRegex([username])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    UserConnection.query(GetFollowingListSQL, [username], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`);
+        } else if (SQLresults.length === 0) {
+            return response.status(404).send(`Cannot find following for user ${username}. Is ${username} following anyone?`);
+        } else {
+            return response.status(200).send(`Found following for user ${username}`).json(SQLresults);
         }
     })
 })
