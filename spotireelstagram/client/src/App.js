@@ -33,6 +33,8 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
+  if (path === '/register') return <Register />;
+
   // show Login only when no authorization has been made, which is used for Logout as well
   const showLogin = !accessToken && !code && (path === '/' || path === '/login');
   if (showLogin) return <Login />;
