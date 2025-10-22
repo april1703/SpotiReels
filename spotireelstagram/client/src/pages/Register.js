@@ -2,25 +2,48 @@ import { Container } from 'react-bootstrap'
 import { useState } from "react";
 
 export default function Register() {
-  
-    const [username, setUsername] = useState("");
-    const [spotifyUser, setSpotifyUser] = useState("");
-    const [password, setPassword] = useState("");
-    const [passwordCheck, setPasswordCheck] = useState("");
-    const [message, setMessage] = useState("")
+    const go = (path) => () => { 
+        window.history.pushState({}, '', path);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+    };
 
-    const handleRegister = (input) => {
+    const [formData, setFormData] = useState({
+      username: '',
+      spotifyUser: '',
+      password: '',
+      checkPassword: '',
+    });
 
-      if (!username || !spotifyUser || !password || !passwordCheck) {
+    const [message, setMessage] = useState('');
+    
+    // Handles inputs
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+          ...prevData,
+          [name]: value,
+        }));
+    };
+
+    // Handles form submission
+    const handleSubmit = (event) => {
+      // prevents a blank form submission
+      event.preventDefault();
+
+      const { username, spotifyUser, password, checkPassword } = formData;
+
+      if (!username || !spotifyUser || !password || !checkPassword) {
         setMessage("Please fill out all fields.");
         return;
       }
 
-      if (password !== passwordCheck) {
+      if (password !== checkPassword) {
         setMessage("Passwords do not match.");
         return; 
       }
 
+      setMessage('Registration successful');
+      console.log('Form data submitted', formData);
     }
 
   return (
@@ -30,12 +53,17 @@ export default function Register() {
       style={{ width: "100%", height: "100vh", backgroundColor: "#1a1a1aff" }}
     >
 
+    <form onSumbit={handleSubmit}>
+
       <h1 class="title" 
       style={{ 
         padding: "50px",
         color: "#8e2dd2ff",
         fontweight: "bold"
-      }}>Register with SpotiReels</h1>
+      }}
+      >
+        Register with SpotiReels
+        </h1>
       
       
       {/* Adding text boxes for username and password */}
@@ -50,33 +78,21 @@ export default function Register() {
         <input
           class="textbox"
           type="text"
+          name="username"
           placeholder='Type username here...'
-          value={username}
-          onChange={(input) => setUsername(input.target.value)}
-          style={{
-              width: "250px",
-              padding: "10px",
-              marginBottom: "20px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              fontSize: "16px",
-          }}
+          value={formData.username}
+          onChange={handleChange}
+          style={inputStyle}
           />
 
         <input
         class="textbox"
         type="text"
+        name="spotifyUser"
         placeholder='Type spotify username here...'
-        value={spotifyUser}
-        onChange={(input) => setSpotifyUser(input.target.value)}
-        style={{
-            width: "250px",
-            padding: "10px",
-            marginBottom: "20px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            fontSize: "16px",
-        }}
+        value={formData.spotifyUser}
+        onChange={handleChange}
+        style={inputStyle}
         />
         </div>
 
@@ -90,38 +106,32 @@ export default function Register() {
         <input
           className="textbox"
           type="text"
+          name="password"
           placeholder="Type password here..."
-          value={password}
-          onChange={(input) => setPassword(input.target.value)}
-          style = {{
-            width: "250px",
-            padding: "10px",
-            marginBottom: "20px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            fontSize: "16px"
-          }}
+          value={formData.password}
+          onChange={handleChange}
+          style = {inputStyle}
         />
         <input
           className="textbox"
           type="text"
+          name="checkPassword"
           placeholder="Retype password..."
-          value={passwordCheck}
-          onChange={(input) => setPasswordCheck(input.target.value)}
-          style = {{
-            width: "250px",
-            padding: "10px",
-            marginBottom: "20px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            fontSize: "16px"
-          }}
+          value={formData.checkPassword}
+          onChange={handleChange}
+          style = {inputStyle}
         />
         </div>
-
+        <div
+        style={{
+          display: "flex",
+          gap: "15px",
+          marginBottom: "20px"
+        }}
+        >
         <button
           type="submit"
-          onClick={handleRegister}
+          onClick={handleSubmit}
           style={{
             backgroundColor: "#8e2dd2ff",
             color: "white",
@@ -134,6 +144,25 @@ export default function Register() {
           >
             Register
           </button>
+
+          <button
+          type="submit"
+          onClick={go("/login")}
+          style={{
+            backgroundColor: "#8e2dd2ff",
+            color: "white",
+            padding: "10px 50px",
+            borderRadius: "5px",
+            border: "none",
+            fontSize: "18px",
+            cursor: "pointer",
+            position: "sticky"
+          }}
+          >
+            Login
+          </button>
+
+        </div>
           
           {message && (
             <p 
@@ -144,7 +173,16 @@ export default function Register() {
               {message}
             </p>
           )}
-          
-  </Container>
+    </form>
+    </Container>
   )
+}
+
+const inputStyle = {
+  width: "250px",
+  padding: "10px",
+  marginBottom: "20px",
+  borderRadius: "5px",
+  border: "1px solid #ccc",
+  fontSize: "16px"
 }

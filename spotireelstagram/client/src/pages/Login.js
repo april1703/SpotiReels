@@ -98,7 +98,7 @@ export default function Login() {
       style={{background: "none", 
         border: "none",   
         margin: 0,      
-        padding: 0,     
+        padding: 10,     
         color: "#8e2dd2ff",  
         fontSize: "15px",   
         cursor: "pointer", 
