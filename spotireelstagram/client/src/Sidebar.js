@@ -1,6 +1,6 @@
 import { FaHome, FaSearch, FaBook, FaPlus, FaFilm, FaCog } from "react-icons/fa"
 
-const Sidebar = () => {
+const Sidebar = ({ onOpenCreatePlaylist }) => {
     const go = (path) => () => { 
         window.history.pushState({}, '', path);
         window.dispatchEvent(new PopStateEvent('popstate'));
@@ -23,7 +23,7 @@ const Sidebar = () => {
                     zIndex: 100
                 }}
                 >
-            <h4 style={{ color: "#8e2dd2ff", marginBottom: "40px"}}>SpotiReelsTagram</h4>
+            <h4 style={{ color: "#8e2dd2ff", marginBottom: "40px"}}>SpotiReels</h4>
             <div
                 style={{
                     display: "flex",
@@ -35,7 +35,7 @@ const Sidebar = () => {
                     <button style={navButtonStyle} onClick={go("/home")}><FaHome />Home</button>
                     <button style={navButtonStyle} onClick={go("/search")}><FaSearch/>Search</button>
                     <button style={navButtonStyle}><FaBook/>Library</button>
-                    <button style={navButtonStyle}><FaPlus/>Playlist</button>
+                    <button style={navButtonStyle} onClick={onOpenCreatePlaylist}><FaPlus/>New Playlist</button>
                     <button style={navButtonStyle}><FaFilm />Reels</button>
                     <button style={navButtonStyle} onClick={go("/settings")}><FaCog />Settings</button>
                 </div>
@@ -58,3 +58,4 @@ const navButtonStyle = {
 };
 
 export default Sidebar;
+
