@@ -1,7 +1,10 @@
 import { Container } from 'react-bootstrap'
 import { useState } from "react";
 
+const parsedUrl = new URL("http://localhost");
+
 export default function Register() {
+    
     const go = (path) => () => { 
         window.history.pushState({}, '', path);
         window.dispatchEvent(new PopStateEvent('popstate'));
@@ -37,13 +40,43 @@ export default function Register() {
         return;
       }
 
-      if (password !== checkPassword) {
+      if (password === checkPassword) {
+        console.log("Passwords match, sending data...");
+        
+        fetch("http://" + parsedUrl.host + ":3001/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ username, spotifyUser, password }),
+        })
+        .then((resp) => {
+            console.log("returned successfully");
+
+            switch (resp.status) {
+              case 201:
+                console.log("Registration successful, redirecting to homepage...")
+                setMessage("Registered successfully. Login with SpotiReels!")
+                window.location.replace("Login.js");
+                break;
+
+              case 409:
+                console.log("User already exists");
+                setMessage("This username has been taken please try again.")
+                break;
+              default:
+                console.error("this is the default case, error occurred");
+            }
+        })
+        .catch((err) => {
+          console.error("Unexpected error:", err);
+          setMessage("Error occurred during registration")
+        });
+      }
+      else {
         setMessage("Passwords do not match.");
         return; 
       }
-
-      setMessage('Registration successful');
-      console.log('Form data submitted', formData);
     }
 
   return (
@@ -53,9 +86,9 @@ export default function Register() {
       style={{ width: "100%", height: "100vh", backgroundColor: "#1a1a1aff" }}
     >
 
-    <form onSumbit={handleSubmit}>
+    <form onClick={handleSubmit}>
 
-      <h1 class="title" 
+      <h1 className="title" 
       style={{ 
         padding: "50px",
         color: "#8e2dd2ff",
@@ -76,7 +109,7 @@ export default function Register() {
         }}
         >
         <input
-          class="textbox"
+          className="textbox"
           type="text"
           name="username"
           placeholder='Type username here...'
@@ -86,7 +119,7 @@ export default function Register() {
           />
 
         <input
-        class="textbox"
+        className="textbox"
         type="text"
         name="spotifyUser"
         placeholder='Type spotify username here...'

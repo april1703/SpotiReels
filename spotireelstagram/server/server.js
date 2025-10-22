@@ -94,6 +94,7 @@ app.get('/spotify-id', (request, response) => {
 
 //REGISTRATION FUNCTION: takes 4 strings, returns network status and message
 app.post("/register", (request, response) => {
+    // Register page passes username, spotifyUser, password, checkPassword
     let {username, spotifyusername, email, password} = request.body;
     if (regexCheck([username, spotifyusername, email, password])) {
         return response.status(403).send(new Error("Invalid characters used."));
