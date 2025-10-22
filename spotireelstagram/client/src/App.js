@@ -8,6 +8,7 @@ import Player from './Player';
 import useAuth from './useAuth';
 import Settings from './pages/Settings';
 import Register from './pages/Register';
+import CreatePlaylistModal from './CreatePlaylistPopup';
 
 //APP.JS EXPLANATION
 // main kinda global app component
@@ -26,6 +27,7 @@ export default function App() {
   // track pathname in state so SPA navigation (pushState) can update the UI seamlessly
   const [path, setPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
   const [trackUri, setTrackUri] = useState(null);
+  const [showCreate, setShowCreate] = useState(false)
 
   useEffect(() => {
     const onPop = () => setPath(window.location.pathname);
@@ -46,7 +48,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <Sidebar />
+      <Sidebar onOpenCreatePlaylist={() => setShowCreate(true)} />
 
       <div style={{ marginLeft: 220, padding: '80px 24px 120px 24px' }}>
         {Content}
@@ -55,6 +57,13 @@ export default function App() {
       <div style={{ position: 'fixed', left: 220, right: 0, bottom: 0, padding: 0, zIndex: 200, backgroundColor: '#000000ff' }}>
         <Player accessToken={accessToken} trackUri={trackUri} />
       </div>
+
+      <CreatePlaylistModal
+        accessToken={accessToken}
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        seedTrackUri={trackUri}
+      />
     </div>
   );
 }

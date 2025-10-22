@@ -79,21 +79,6 @@ export default function Settings() {
                 </Col>
             </Row>
 
-            <button
-            onClick={logout}
-            style={{
-              backgroundColor: "#8e2dd2ff",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              padding: "6px 12px",
-              cursor: "pointer",
-              fontSize: "14px"
-            }}
-            >
-                Logout
-            </button>
-
             {saved && (
                 <Row className="mb-3">
                     <Col>
@@ -186,16 +171,57 @@ export default function Settings() {
                 </Row>
 
                 <div className="d-flex gap-2 mt-4">
-                    <Button type="submit" variant="primary">
-                        Save changes
-                    </Button>
-                    <Button type="button" variant="outline-secondary" onClick={onReset}>
-                        Reset to defaults
-                    </Button>
+                    <div className="d-flex gap-2">
+                        <Button type="submit" variant="primary" style={{ backgroundColor:"#8e2dd2ff" }}>
+                            Save changes
+                        </Button>
+                        <Button type="button" variant="outline-secondary" onClick={onReset}>
+                            Reset to defaults
+                        </Button>
+                    </div>
+
+                    <button
+                    onClick={logout}
+                    className="ms-auto"
+                    variant="outline-danger"
+                    style={{
+                    backgroundColor: "#8e2dd2ff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontSize: "14px"
+                    }}
+                    >
+                        Logout
+                    </button>
                 </div>
             </Form>
 
             <style>{`
+                :root { --brand: #8e2dd2; }
+
+                .btn-brand {
+                    background-color: var(--brand);
+                    border-color: var(--brand);
+                }
+                
+                .btn-brand:hover, .btn-brand:focus {
+                    background-color: #7b22bf;
+                    border-color: #7b22bf;
+                }
+
+                .form-switch .form-check-input:checked {
+                    background-color: var(--brand);
+                    border-color: var(--brand);
+                }
+                
+                .form-switch .form-check-input:focus {
+                    box-shadow: 0 0 0 0.25rem rgba(142, 45, 210, 0.25);
+                    border-color: var(--brand);
+                }
+                    
                 .theme-dark { color-scheme: dark; }
                 .theme-light { color-scheme: light; }
             `}</style>

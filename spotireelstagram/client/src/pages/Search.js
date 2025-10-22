@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 // SEARCH PAGE EXPLANATION
 // allows searching for tracks, artists, albums
