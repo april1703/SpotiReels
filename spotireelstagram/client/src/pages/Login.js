@@ -20,7 +20,7 @@ async function getSpotifyId() {
 }
 
 const SPOTIFY_ID = await getSpotifyId(); // if in top-level await context
-const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_ID}&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state`
+const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_ID}&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state%20playlist-modify-public%20playlist-modify-private`;
 
 export default function Login() {
   const go = (path) => () => { 
@@ -98,7 +98,7 @@ export default function Login() {
       style={{background: "none", 
         border: "none",   
         margin: 0,      
-        padding: 10,     
+        padding: 30,     
         color: "#8e2dd2ff",  
         fontSize: "15px",   
         cursor: "pointer", 
