@@ -46,7 +46,7 @@ export default function Register() {
         fetch("http://localhost:3001/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, spotifyUser, password }),
+          body: JSON.stringify({ username: username, spotifyUser: spotifyUser, password: password }),
         })
         .then((resp) => {
             switch (resp.status) {

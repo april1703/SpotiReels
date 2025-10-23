@@ -19,7 +19,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const ExistingUserSQLCheck = "SELECT username FROM users WHERE username = ?";
-const UserRegistrationSQL = "INSERT INTO users (username, spotifyUsername, email, password, salt, isDarkMode, isExplicit) VALUES (?, ?, ?, ?, ?, FALSE, FALSE)";
+const UserRegistrationSQL = "INSERT INTO users (username, spotifyUser, password, salt) VALUES (?, ?, ?, ?)";
 const CheckInputPasswordSQL = "SELECT password, salt FROM users WHERE username = ?";
 const PasswordChangeSQL = "UPDATE users SET password = ?, salt = ? WHERE username = ?";
 const ChangeExplicitSQL = "UPDATE users SET isExplicit = ? WHERE username = ?";
@@ -95,20 +95,20 @@ app.get('/spotify-id', (request, response) => {
 //REGISTRATION FUNCTION: takes 4 strings, returns network status and message
 app.post("/register", (request, response) => {
     // Register page passes username, spotifyUser, password, checkPassword
-    let {username, spotifyUser, password} = request.body;
+    const {username, spotifyUser, password} = request.body;
     if (checkRegex([username, spotifyUser, password])) {
-        return response.status(403).send(new Error("Invalid characters used."));
+        return response.status(400).send("Invalid characters used.");
     }
     UserConnection.query(ExistingUserSQLCheck, [username], (SQLerror, SQLresults) =>{
         if (SQLerror) {
-            return response.status(500).send(new Error(`Database error: ${SQLerror.message}`));
+            return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
 
         if (SQLresults.length !== 0) {
-            return response.status(409).send(new Error('User already exists'));
+            return response.status(409).send("User already exists");
         }
-    })
-    let newSalt = crypto.randomBytes(Math.ceil(12 / 2))
+    
+    const newSalt = crypto.randomBytes(Math.ceil(12 / 2))
     .toString("hex")
     .slice(0, 12);
     bcrypt.hash(newSalt + password + PEPPER, 12)
@@ -119,6 +119,11 @@ app.post("/register", (request, response) => {
             }
             return response.status(201).send(`User ${username} successfully created.`);
         })
+    })
+     .catch(err => {
+         console.error(err);
+         return response.status(500).send("Encryption error.")
+     })
     });
 });
 
@@ -270,6 +275,7 @@ const SQL_REGEX = /["':;(){}|\/\\]/;
 function checkRegex(listOfItems) {
     for (let i = 0; i < listOfItems.length; i++) {
         if(SQL_REGEX.test(listOfItems[i])){
+            console.log("Register input:", username, spotifyUser, password);
             return true;
         }
     }

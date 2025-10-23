@@ -4,12 +4,12 @@ use account_information;
 
 CREATE TABLE users (
     username VARCHAR(255) NOT NULL,
-    spotifyUsername VARCHAR(255) NOT NULL,
+    spotifyUser VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     password CHAR(60) NOT NULL,
     salt CHAR(12) NOT NULL,
-    isDarkMode BOOLEAN NOT NULL,
-    isExplicit BOOLEAN NOT NULL,
+    --isDarkMode BOOLEAN NOT NULL,
+    --isExplicit BOOLEAN NOT NULL,
     PRIMARY KEY (username)
 );
 
