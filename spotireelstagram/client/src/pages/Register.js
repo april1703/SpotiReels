@@ -2,11 +2,6 @@ import { Container } from 'react-bootstrap'
 import { useState } from "react";
 
 export default function Register() {
-    
-    const go = (path) => () => { 
-        window.history.pushState({}, '', path);
-        window.dispatchEvent(new PopStateEvent('popstate'));
-    };
 
     const [formData, setFormData] = useState({
       username: '',
@@ -171,23 +166,6 @@ export default function Register() {
           }}
           >
             Register
-          </button>
-
-          <button
-          type="submit"
-          onClick={go("/login")}
-          style={{
-            backgroundColor: "#8e2dd2ff",
-            color: "white",
-            padding: "10px 50px",
-            borderRadius: "5px",
-            border: "none",
-            fontSize: "18px",
-            cursor: "pointer",
-            position: "sticky"
-          }}
-          >
-            Login
           </button>
 
         </div>

@@ -1,5 +1,6 @@
 import { Container } from 'react-bootstrap'
 import { FaSpotify } from "react-icons/fa"
+import { useState } from "react";
 
 //LOGIN PAGE EXPLAINED
 //creates an AUTH_URL with client ID, redirect URI, and a list of scopes (streaming, playback, library read/write, user read email/private)
@@ -27,12 +28,82 @@ export default function Login() {
         window.history.pushState({}, '', path);
         window.dispatchEvent(new PopStateEvent('popstate'));
     };
+
+  const [formData, setFormData] = useState({
+        username: '',
+        password: ''
+      });
+
+  const [message, setMessage] = useState('');
+
+  // Handles inputs
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+          ...prevData,
+          [name]: value,
+        }));
+    };
+
+    const handleSubmit = (event) => {
+      event.preventDefault();
+
+      const { username, password } = formData;
+      
+      if (!username || !password ) {
+        setMessage("Please enter username and password.");
+        return;
+      }
+
+      fetch("http://localhost:3001/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json"},
+        body: JSON.stringify({ username, password })
+
+      })
+       .then(async (data) => {
+          switch(data.status) {
+            case 200:
+              console.log("Login successful, redirecting to home screen...");
+              window.location.href = "/home";
+              return;
+            
+            case 404:
+              console.error("Username or password does not match database");
+              setMessage("Wrong username or password, try again")
+              break;
+
+            case 500:
+              console.error("500: Database error: " + data.status);
+              setMessage("Database error");
+              break;
+
+            default:
+            setMessage("Default Database error "); 
+            console.error("Unexpected response status: " + data.status);
+          }
+     
+       })
+       .catch((err) => {
+          console.error("Unexpected error: " + err.message);
+         
+       }) 
+      }
+    
+
   return (
     <Container
     fluid 
       className='d-flex flex-column justify-content-center align-items-center' 
       style={{ width: "100%", height: "100vh", backgroundColor: "#1a1a1aff" }}
     >
+
+    <form onSubmit={handleSubmit}
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center"
+    }}>
 
       {/* Spotify Icon */}
 
@@ -58,20 +129,27 @@ export default function Login() {
 
       <input
         type="text"
+        name="username"
         placeholder='Username'
+        value={formData.username}
+        onChange={handleChange}
         style={{
             width: "250px",
             padding: "10px",
             marginBottom: "20px",
             borderRadius: "5px",
             border: "1px solid #ccc",
-            fontSize: "16px",
+            fontSize: "16px"
         }}
         />
 
         <input
-          type="text"
+          className="textbox"
+          type="password"
+          name="password"
           placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
           style = {{
             width: "250px",
             padding: "10px",
@@ -82,18 +160,20 @@ export default function Login() {
           }}
         />
 
-      <a href={AUTH_URL}
-         style={{
-          backgroundColor: "#8e2dd2ff",
-          color: "white",
-          padding: "10px 50px",
-          borderRadius: "5px",
-          textDecoration: "none",
-          fontSize: "18px",  
-         }}
-         >
-          Login
-      </a>
+      <button
+          type="submit"
+          style={{
+            backgroundColor: "#8e2dd2ff",
+            color: "white",
+            padding: "10px 50px",
+            borderRadius: "5px",
+            border: "none",
+            fontSize: "18px",
+            cursor: "pointer"
+          }}
+          >
+            Login
+          </button>
   <button
       style={{background: "none", 
         border: "none",   
@@ -107,6 +187,16 @@ export default function Login() {
           Don't have an account? Register here!
         </button>
         
+        {message && (
+            <p 
+            style={{
+              color: "white",
+              marginTop: "20px"
+            }}>
+              {message}
+            </p>
+          )}
+        
       {/* Pulse animation */}
       <style>
         {`
@@ -117,6 +207,7 @@ export default function Login() {
           }
         `}
       </style>
+    </form>
   </Container>
   )
 }
