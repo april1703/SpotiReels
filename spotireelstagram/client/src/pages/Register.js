@@ -48,20 +48,24 @@ export default function Register() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username: username, spotifyUser: spotifyUser, password: password }),
         })
-        .then((resp) => {
+        .then(async (resp) => {
+            const data = await resp.json().catch(() => ({}));
             switch (resp.status) {
               case 201:
                 console.log("Registration successful, redirecting to homepage...")
                 setMessage("Registered successfully. Login with SpotiReels!")
-                window.location.href("/login");
+                window.location.href = "/login";
                 break;
 
               case 409:
                 console.log("User already exists");
                 setMessage("This username has been taken please try again.")
                 break;
+              case 500: 
+                console.error("Server error:", resp.statusText, data);
+                break;
               default:
-                console.error("this is the default case, error occurred");
+                console.error("Unexpected error:", resp.status, data);
             }
         })
         .catch((err) => {

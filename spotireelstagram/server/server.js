@@ -19,7 +19,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const ExistingUserSQLCheck = "SELECT username FROM users WHERE username = ?";
-const UserRegistrationSQL = "INSERT INTO users (username, spotifyUser, password, salt) VALUES (?, ?, ?, ?)";
+const UserRegistrationSQL = "INSERT INTO users (username, spotifyUser, password, salt, isDarkMode, isExplicit) VALUES (?, ?, ?, ?, FALSE, FALSE)";
 const CheckInputPasswordSQL = "SELECT password, salt FROM users WHERE username = ?";
 const PasswordChangeSQL = "UPDATE users SET password = ?, salt = ? WHERE username = ?";
 const ChangeExplicitSQL = "UPDATE users SET isExplicit = ? WHERE username = ?";
@@ -87,7 +87,7 @@ app.listen(3001, () => {
 })
 
 app.get('/spotify-id', (request, response) => {
-    console.log("User requested Spotify ID");
+    console.log(`User requested Spotify ID: ${SPOTIFY_CLIENT_ID}`);
     return response.status(200).json(SPOTIFY_CLIENT_ID);
     
 })
@@ -107,7 +107,7 @@ app.post("/register", (request, response) => {
         if (SQLresults.length !== 0) {
             return response.status(409).send("User already exists");
         }
-    
+    console.log("Creating new user...");
     const newSalt = crypto.randomBytes(Math.ceil(12 / 2))
     .toString("hex")
     .slice(0, 12);
@@ -115,8 +115,10 @@ app.post("/register", (request, response) => {
     .then(hashedPassword => {
         UserConnection.query(UserRegistrationSQL, [username, spotifyUser, hashedPassword, newSalt], (SQLerror, SQLresults) => {
             if (SQLerror) {
-            return response.status(500).send(`Database error: ${SQLerror}`);
+                console.error(`BCrypt error: ${SQLerror.message}`);
+                return response.status(500).send(`Database error: ${SQLerror}`);
             }
+            console.error("Success!");
             return response.status(201).send(`User ${username} successfully created.`);
         })
     })
