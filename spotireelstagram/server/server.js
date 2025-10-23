@@ -95,8 +95,8 @@ app.get('/spotify-id', (request, response) => {
 //REGISTRATION FUNCTION: takes 4 strings, returns network status and message
 app.post("/register", (request, response) => {
     // Register page passes username, spotifyUser, password, checkPassword
-    let {username, spotifyusername, email, password} = request.body;
-    if (regexCheck([username, spotifyusername, email, password])) {
+    let {username, spotifyUser, password} = request.body;
+    if (checkRegex([username, spotifyUser, password])) {
         return response.status(403).send(new Error("Invalid characters used."));
     }
     UserConnection.query(ExistingUserSQLCheck, [username], (SQLerror, SQLresults) =>{
@@ -113,11 +113,11 @@ app.post("/register", (request, response) => {
     .slice(0, 12);
     bcrypt.hash(newSalt + password + PEPPER, 12)
     .then(hashedPassword => {
-        UserConnection.query(UserRegistrationSQL, [username, spotifyusername, email, hashedPassword, newSalt], (SQLerror, SQLresults) => {
+        UserConnection.query(UserRegistrationSQL, [username, spotifyUser, hashedPassword, newSalt], (SQLerror, SQLresults) => {
             if (SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror}`);
             }
-            return response.status(200).send(`User ${username} successfully created.`);
+            return response.status(201).send(`User ${username} successfully created.`);
         })
     });
 });
@@ -268,7 +268,7 @@ app.post("/getFollowing", (request, response) => {
 //REGEX CHECK: takes an array, returns a boolean
 const SQL_REGEX = /["':;(){}|\/\\]/;
 function checkRegex(listOfItems) {
-    for (let i = 0; i < listOfItems.length(); i++) {
+    for (let i = 0; i < listOfItems.length; i++) {
         if(SQL_REGEX.test(listOfItems[i])){
             return true;
         }

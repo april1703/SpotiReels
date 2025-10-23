@@ -1,8 +1,6 @@
 import { Container } from 'react-bootstrap'
 import { useState } from "react";
 
-const parsedUrl = new URL("http://localhost");
-
 export default function Register() {
     
     const go = (path) => () => { 
@@ -40,24 +38,22 @@ export default function Register() {
         return;
       }
 
-      if (password === checkPassword) {
-        console.log("Passwords match, sending data...");
-        
-        fetch("http://" + parsedUrl.host + ":3001/register", {
+      if (password !== checkPassword) {
+        setMessage("Passwords do not match.");
+        return;
+      }
+
+        fetch("http://localhost:3001/register", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, spotifyUser, password }),
         })
         .then((resp) => {
-            console.log("returned successfully");
-
             switch (resp.status) {
               case 201:
                 console.log("Registration successful, redirecting to homepage...")
                 setMessage("Registered successfully. Login with SpotiReels!")
-                window.location.replace("Login.js");
+                window.location.href("/login");
                 break;
 
               case 409:
@@ -72,12 +68,8 @@ export default function Register() {
           console.error("Unexpected error:", err);
           setMessage("Error occurred during registration")
         });
-      }
-      else {
-        setMessage("Passwords do not match.");
-        return; 
-      }
-    }
+      };
+    
 
   return (
     <Container
@@ -86,7 +78,7 @@ export default function Register() {
       style={{ width: "100%", height: "100vh", backgroundColor: "#1a1a1aff" }}
     >
 
-    <form onClick={handleSubmit}>
+    <form onSubmit={handleSubmit}>
 
       <h1 className="title" 
       style={{ 
@@ -138,7 +130,7 @@ export default function Register() {
         >
         <input
           className="textbox"
-          type="text"
+          type="password"
           name="password"
           placeholder="Type password here..."
           value={formData.password}
@@ -147,7 +139,7 @@ export default function Register() {
         />
         <input
           className="textbox"
-          type="text"
+          type="password"
           name="checkPassword"
           placeholder="Retype password..."
           value={formData.checkPassword}
@@ -164,7 +156,6 @@ export default function Register() {
         >
         <button
           type="submit"
-          onClick={handleSubmit}
           style={{
             backgroundColor: "#8e2dd2ff",
             color: "white",
