@@ -20,8 +20,8 @@ async function getSpotifyId() {
   }
 }
 
-const SPOTIFY_ID = await getSpotifyId(); // if in top-level await context
-const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_ID}&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state%20playlist-modify-public%20playlist-modify-private`;
+const SPOTIFY_ID = await getSpotifyId();
+const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_ID}&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state%20playlist-modify-public%20playlist-modify-private&show_dialog=true`;
 
 export default function Login() {
   const go = (path) => () => { 
@@ -65,7 +65,7 @@ export default function Login() {
           switch(data.status) {
             case 200:
               console.log("Login successful, redirecting to home screen...");
-              window.location.href = "/home";
+              window.location.href = AUTH_URL;
               return;
             
             case 404:
@@ -159,7 +159,6 @@ export default function Login() {
             fontSize: "16px"
           }}
         />
-
       <button
           type="submit"
           style={{

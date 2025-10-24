@@ -1,6 +1,6 @@
 services:
 # the sql containers
- mysql-users:
+ database:
   image: mysql
   environment: 
   - MYSQL_ROOT_PASSWORD=lakwdmoanwdoianksndakna
@@ -10,7 +10,14 @@ services:
   ports: 
   - "3307:3306"
   volumes:
+  # - mysql-data:/var/lib/mysql - uncomment if you want to save your sql data between sessions
   - ./sql:/docker-entrypoint-initdb.d/
+  healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
  server:
   build: ./spotireelstagram/server
@@ -42,10 +49,10 @@ services:
   - WATCHPACK_POLLING=true
   - NODE_ENV=development
 
+#volumes: - uncomment both to save sql data between builds
+# mysql-data:
 
-# the server to process requests
-
-# # Network setup
+# # Network setup (for later)
 # networks:
 #   main-network:
 #     driver: bridge

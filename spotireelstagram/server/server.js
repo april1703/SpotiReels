@@ -30,7 +30,7 @@ const UserConnection = mysql.createConnection({
     host: SQL_HOST,
     user: SQL_USER,
     password: SQL_PASSWORD,
-    database: "account_information",
+    database: "spottireels",
 });
 UserConnection.ping(err => {
   if (err) console.error("Ping failed:", err);
