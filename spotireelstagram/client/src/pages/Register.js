@@ -58,6 +58,7 @@ export default function Register() {
                 break;
               case 500: 
                 console.error("Server error:", resp.statusText, data);
+                
                 break;
               default:
                 console.error("Unexpected error:", resp.status, data);

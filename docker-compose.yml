@@ -12,11 +12,11 @@ services:
   volumes:
   # - mysql-data:/var/lib/mysql - uncomment if you want to save your sql data between sessions
   - ./sql:/docker-entrypoint-initdb.d/
-  healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$MYSQL_ROOT_PASSWORD"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  #healthcheck:
+    #  test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$MYSQL_ROOT_PASSWORD"]
+     # interval: 10s
+     # timeout: 5s
+     # retries: 5
 
 
  server:
