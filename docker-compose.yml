@@ -23,7 +23,7 @@ services:
   build: ./spotireelstagram/server
   env_file: ./spotireelstagram/server/.env
   depends_on:
-  - mysql-users
+  - database
   ports:
   - "3001:3001"
   environment:
@@ -37,7 +37,7 @@ services:
  client:
   build: ./spotireelstagram/client
   depends_on:
-  - mysql-users
+  - database
   - server
   ports:
   - "3000:3000"
