@@ -1,0 +1,54 @@
+/*Home page design*/
+
+.home-container {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #1a1a1aff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 220px;
+    right: 0;
+    height: 60px;
+    background-color: #000000ff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 24px;
+    z-index: 300;
+    border-bottom: 1px solid #000;
+}
+
+.navbar-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.window-button {
+    background: transparent;
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease transform 0.1s ease;
+}
+
+.window-button:hover {
+    color: #8e2dd2ff;
+    transform: scale(1.1);
+}
+
+.navbar-space {
+    height: 60px;
+}

@@ -1,6 +1,7 @@
 import { Container } from 'react-bootstrap'
 import { FaSpotify } from "react-icons/fa"
 import { useState } from "react";
+import "./Login.css";
 
 //LOGIN PAGE EXPLAINED
 //creates an AUTH_URL with client ID, redirect URI, and a list of scopes (streaming, playback, library read/write, user read email/private)
@@ -29,11 +30,7 @@ export default function Login() {
         window.dispatchEvent(new PopStateEvent('popstate'));
     };
 
-  const [formData, setFormData] = useState({
-        username: '',
-        password: ''
-      });
-
+  const [formData, setFormData] = useState({username: '', password: ''});
   const [message, setMessage] = useState('');
 
   // Handles inputs
@@ -92,37 +89,17 @@ export default function Login() {
     
 
   return (
-    <Container
-    fluid 
-      className='d-flex flex-column justify-content-center align-items-center' 
-      style={{ width: "100%", height: "100vh", backgroundColor: "#1a1a1aff" }}
-    >
+    <Container fluid className="login-container">
 
-    <form onSubmit={handleSubmit}
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center"
-    }}>
+    <form className="login-form" onSubmit={handleSubmit}>
 
       {/* Spotify Icon */}
 
       <FaSpotify 
         size={190}
         color="#8e2dd2ff"
-        style={{
-          marginBottom: "10px", 
-          animation: "pulse 2s infinite"
-        }}
-        />
-        <h1
-          style={{
-            color: "#8e2dd2ff",
-            fontWeight: "bold",
-            fontSize: "2rem",
-            marginBottom: "30px"
-          }}
-        >
+        className="spotify-icon"/>
+        <h1 className='login-title'>
           SpotiReels
         </h1>
       {/* Adding a two text boxes for username and password */}
@@ -133,79 +110,28 @@ export default function Login() {
         placeholder='Username'
         value={formData.username}
         onChange={handleChange}
-        style={{
-            width: "250px",
-            padding: "10px",
-            marginBottom: "20px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            fontSize: "16px"
-        }}
+        className='login-input'
         />
 
         <input
-          className="textbox"
           type="password"
           name="password"
           placeholder="Password"
           value={formData.password}
           onChange={handleChange}
-          style = {{
-            width: "250px",
-            padding: "10px",
-            marginBottom: "20px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            fontSize: "16px"
-          }}
-        />
-      <button
-          type="submit"
-          style={{
-            backgroundColor: "#8e2dd2ff",
-            color: "white",
-            padding: "10px 50px",
-            borderRadius: "5px",
-            border: "none",
-            fontSize: "18px",
-            cursor: "pointer"
-          }}
-          >
-            Login
-          </button>
-  <button
-      style={{background: "none", 
-        border: "none",   
-        margin: 0,      
-        padding: 30,     
-        color: "#8e2dd2ff",  
-        fontSize: "15px",   
-        cursor: "pointer", 
-        textDecoration: "underline"}}
-        onClick={go("/register")}>
-          Don't have an account? Register here!
+          className='login-input'
+          />
+
+      <button type="submit" className='login-button'>
+        Login
+        </button>
+  
+      <button onClick={go("/register")} className='register-link'>
+        Don't have an account? Register here!
         </button>
         
-        {message && (
-            <p 
-            style={{
-              color: "white",
-              marginTop: "20px"
-            }}>
-              {message}
-            </p>
-          )}
+        {message && <p className='login-message'>{message}</p>}
         
-      {/* Pulse animation */}
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.9; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </form>
   </Container>
   )

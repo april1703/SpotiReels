@@ -1,11 +1,11 @@
 import { Container } from 'react-bootstrap'
 import { useState } from "react";
+import "./Register.css";
 
 export default function Register() {
 
     const [formData, setFormData] = useState({
       username: '',
-      spotifyUser: '',
       password: '',
       checkPassword: '',
     });
@@ -26,9 +26,9 @@ export default function Register() {
       // prevents a blank form submission
       event.preventDefault();
 
-      const { username, spotifyUser, password, checkPassword } = formData;
+      const { username, password, checkPassword } = formData;
 
-      if (!username || !spotifyUser || !password || !checkPassword) {
+      if (!username || !password || !checkPassword) {
         setMessage("Please fill out all fields.");
         return;
       }
@@ -41,7 +41,7 @@ export default function Register() {
         fetch("http://localhost:3001/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: username, spotifyUser: spotifyUser, password: password }),
+          body: JSON.stringify({ username: username, password: password }),
         })
         .then(async (resp) => {
             const data = await resp.json().catch(() => ({}));
@@ -69,127 +69,50 @@ export default function Register() {
           setMessage("Error occurred during registration")
         });
       };
+
+    const go = (path) => () => { 
+        window.history.pushState({}, '', path);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+    };
     
 
   return (
-    <Container
-    fluid 
-      className='d-flex flex-column justify-content-center align-items-center' 
-      style={{ width: "100%", height: "100vh", backgroundColor: "#1a1a1aff" }}
-    >
-
-    <form onSubmit={handleSubmit}>
-
-      <h1 className="title" 
-      style={{ 
-        padding: "50px",
-        color: "#8e2dd2ff",
-        fontweight: "bold"
-      }}
-      >
-        Register with SpotiReels
-        </h1>
+    <Container fluid className="register-container">
+    <form onSubmit={handleSubmit} className="register-form">
+      <h1 className='register-title'>Register with SpotiReels</h1>
       
-      
-      {/* Adding text boxes for username and password */}
-
-      <div
-        style={{
-          display: "flex",
-          gap: "15px",
-          marginBottom: "20px"
-        }}
-        >
         <input
-          className="textbox"
           type="text"
           name="username"
           placeholder='Type username here...'
           value={formData.username}
           onChange={handleChange}
-          style={inputStyle}
+          className="register-input"
           />
-
+    
         <input
-        className="textbox"
-        type="text"
-        name="spotifyUser"
-        placeholder='Type spotify username here...'
-        value={formData.spotifyUser}
-        onChange={handleChange}
-        style={inputStyle}
-        />
-        </div>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "15px",
-          marginBottom: "20px"
-        }}
-        >
-        <input
-          className="textbox"
           type="password"
           name="password"
           placeholder="Type password here..."
           value={formData.password}
           onChange={handleChange}
-          style = {inputStyle}
+          className="register-input"
         />
+
         <input
-          className="textbox"
           type="password"
           name="checkPassword"
           placeholder="Retype password..."
           value={formData.checkPassword}
           onChange={handleChange}
-          style = {inputStyle}
+          className="register-input"
         />
-        </div>
-        <div
-        style={{
-          display: "flex",
-          gap: "15px",
-          marginBottom: "20px"
-        }}
-        >
-        <button
-          type="submit"
-          style={{
-            backgroundColor: "#8e2dd2ff",
-            color: "white",
-            padding: "10px 50px",
-            borderRadius: "5px",
-            border: "none",
-            fontSize: "18px",
-            cursor: "pointer"
-          }}
-          >
-            Register
-          </button>
+     
+        <button type="submit" className='register-button'>Register</button>
+        <button onClick={go("/login")} className='login-link'>Already have an account? Login here!</button>
 
-        </div>
-          
-          {message && (
-            <p 
-            style={{
-              color: "white",
-              marginTop: "20px"
-            }}>
-              {message}
-            </p>
-          )}
+          {message && <p className='register-message'>{message}</p>}
     </form>
     </Container>
   )
-}
-
-const inputStyle = {
-  width: "250px",
-  padding: "10px",
-  marginBottom: "20px",
-  borderRadius: "5px",
-  border: "1px solid #ccc",
-  fontSize: "16px"
 }
