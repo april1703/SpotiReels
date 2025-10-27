@@ -4,7 +4,6 @@ USE spottireels;
 -- USERS TABLE
 CREATE TABLE users (
     username VARCHAR(50) NOT NULL,
-    spotifyUser VARCHAR(50) NOT NULL,
     password CHAR(60) NOT NULL,
     salt CHAR(12) NOT NULL,
     isDarkMode BOOLEAN NOT NULL,
@@ -49,10 +48,10 @@ CREATE TABLE liked_songs (
 
 -- FOR DEBUGGING PURPOSES ONLY, WILL BE REMOVED LATER
 INSERT INTO users VALUES
-("testuser1", "spotifyUserTest",
+("testuser1",
  "$2b$12$iE0iYgAs47Z/ROtJlzzOWeoFCE4nvHBFrudSTEicDbuuVCNmo4yBy",
  "basicsalt123", TRUE, TRUE),
-("testuser2", "spotifyUserTest2",
+("testuser2",
  "$2b$12$iE0iYgAs47Z/ROtJlzzOWeoFCE4nvHBFrudSTEicDbuuVCNmo4yBy",
  "basicsalt123", TRUE, TRUE);
 

@@ -19,7 +19,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const ExistingUserSQLCheck = "SELECT username FROM users WHERE username = ?";
-const UserRegistrationSQL = "INSERT INTO users (username, spotifyUser, password, salt, isDarkMode, isExplicit) VALUES (?, ?, ?, ?, FALSE, FALSE)";
+const UserRegistrationSQL = "INSERT INTO users (username, password, salt, isDarkMode, isExplicit) VALUES (?, ?, ?, FALSE, FALSE)";
 const CheckInputPasswordSQL = "SELECT password, salt FROM users WHERE username = ?";
 const PasswordChangeSQL = "UPDATE users SET password = ?, salt = ? WHERE username = ?";
 const ChangeExplicitSQL = "UPDATE users SET isExplicit = ? WHERE username = ?";
@@ -94,9 +94,9 @@ app.get('/spotify-id', (request, response) => {
 
 //REGISTRATION FUNCTION: takes 4 strings, returns network status and message
 app.post("/register", (request, response) => {
-    // Register page passes username, spotifyUser, password, checkPassword
-    const {username, spotifyUser, password} = request.body;
-    if (checkRegex([username, spotifyUser, password])) {
+    // Register page passes username, password, checkPassword
+    const {username, password} = request.body;
+    if (checkRegex([username, password])) {
         return response.status(400).send("Invalid characters used.");
     }
     UserConnection.query(ExistingUserSQLCheck, [username], (SQLerror, SQLresults) =>{
@@ -113,7 +113,7 @@ app.post("/register", (request, response) => {
     .slice(0, 12);
     bcrypt.hash(newSalt + password + PEPPER, 12)
     .then(hashedPassword => {
-        UserConnection.query(UserRegistrationSQL, [username, spotifyUser, hashedPassword, newSalt], (SQLerror, SQLresults) => {
+        UserConnection.query(UserRegistrationSQL, [username, hashedPassword, newSalt], (SQLerror, SQLresults) => {
             if (SQLerror) {
                 console.error(`BCrypt error: ${SQLerror.message}`);
                 return response.status(500).send(`Database error: ${SQLerror}`);
@@ -277,7 +277,7 @@ const SQL_REGEX = /["':;(){}|\/\\]/;
 function checkRegex(listOfItems) {
     for (let i = 0; i < listOfItems.length; i++) {
         if(SQL_REGEX.test(listOfItems[i])){
-            console.log("Register input:", username, spotifyUser, password);
+            console.log("Register input:", username, password);
             return true;
         }
     }
