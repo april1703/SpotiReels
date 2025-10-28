@@ -122,7 +122,7 @@ app.post("/register", (request, response) => {
     if (checkRegex([username, password])) {
         return response.status(400).send("Invalid characters used.");
     }
-    Connection.query(ExistingUserSQLCheck, [username], (SQLerror, SQLresults) =>{
+    Connection.query(SQL_REQUESTS.user.checkExisting, [username], (SQLerror, SQLresults) =>{
         if (SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
