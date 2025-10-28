@@ -94,7 +94,7 @@ function LikeButton({ checked, onChange, size = 26, color = "rgb(189, 91, 255)" 
             />
           </svg>
           
-          <svg className="svg-filled" viewBox="0 0 24 24" width={size} height={size}>
+          <svg className="svg-filled" viewBox="0 0 21 21" width={size} height={size}>
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41.81 4.5 2.09C12.09 4.81 13.76 4 15.5 4 18 4 20 6 20 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
           </svg>
 
@@ -310,7 +310,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
               onError={(e) => { e.currentTarget.style.display = "none"; }}
               style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", background: "#222" }}
             />
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start", }}>
               <span style={{ display: "inline-block", padding: "2px 8px", fontSize: 12, borderRadius: 999, border: "1px solid #444" }}>{pill}</span>
               <div style={{ fontWeight: 600, lineHeight: 1.2 }} dangerouslySetInnerHTML={{__html: escapeHtml(title) }} />
               <div style={{ color: "#ffffffff", fontSize: 13 }} dangerouslySetInnerHTML={{__html: escapeHtml(subtitle || "") }} />
