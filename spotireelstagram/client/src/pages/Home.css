@@ -9,6 +9,33 @@
     overflow: hidden;
 }
 
+.playlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 24px;
+    justify-items: center;
+}
+
+.playlist-card {
+    background-color: #2a2a2aff;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    transition: transform 0.2s ease;
+    cursor: pointer;
+}
+
+.playlist-card:hover {
+    transform: scale(1.05);
+    background-color: #8e2dd255;
+}
+
+.playlist-image {
+    width: 100%;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
 .navbar {
     position: fixed;
     top: 0;

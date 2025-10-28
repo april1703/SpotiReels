@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "./playlistPopup.css"
 
 //popup appears when +  button on sidebar is clicked
 
@@ -58,7 +59,10 @@ export default function CreatePlaylistPopup({
       setMsg("Playlist created!");
       // quick reset then close
       setTimeout(() => {
-        setName(""); setDescription(""); setBusy(false); onClose();
+        setName(""); 
+        setDescription(""); 
+        setBusy(false); 
+        onClose();
       }, 700);
     } catch (err) {
       console.error(err);
@@ -70,18 +74,18 @@ export default function CreatePlaylistPopup({
   if (!isOpen) return null;
 
   return (
-    <div style={backdropStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+    <div className="backdropStyle" onClick={onClose}>
+      <div className="modalStyle" onClick={(e) => e.stopPropagation()}>
+        <div className="header">
           <h3 style={{ margin: 0 }}>Create Playlist</h3>
-          <button onClick={onClose} style={xBtnStyle}>×</button>
+          <button onClick={onClose} className="popup-close">×</button>
         </div>
 
-        <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <form onSubmit={handleCreate} className="form">
           <label>
-            <div style={labelStyle}>Name*</div>
+            <div className="label">Name*</div>
             <input
-              style={inputStyle}
+              className="input"
               type="text"
               placeholder="My Playlist"
               value={name}
@@ -90,9 +94,9 @@ export default function CreatePlaylistPopup({
           </label>
 
           <label>
-            <div style={labelStyle}>Description</div>
+            <div className="label">Description</div>
             <input
-              style={inputStyle}
+              className="input"
               type="text"
               placeholder="Vibes, genre, purpose, etc."
               value={description}
@@ -100,64 +104,13 @@ export default function CreatePlaylistPopup({
             />
           </label>
 
-          <button type="submit" disabled={busy} style={submitStyle}>
+          <button type="submit" disabled={busy} className="submitStyle">
             {busy ? "Creating…" : "Create"}
           </button>
-          {msg && <div style={{ color: "#b3ffb3" }}>{msg}</div>}
-          {!accessToken && <div style={{ color: "#ffb3b3" }}>Not logged in.</div>}
+          {msg && <div className="message">{msg}</div>}
+          {!accessToken && <div className="error">Not logged in.</div>}
         </form>
       </div>
     </div>
   );
 }
-
-const backdropStyle = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0, 0, 0, 0.6)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 1000,
-};
-
-const modalStyle = {
-  width: "min(560px, 92vw)",
-  background: "#121212",
-  color: "white",
-  borderRadius: 12,
-  padding: 18,
-  border: "1px solid #2a2a2a",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "10px 12px",
-  borderRadius: 8,
-  border: "1px solid #333",
-  background: "#1a1a1a",
-  color: "white",
-  outline: "none",
-};
-
-const labelStyle = { fontSize: 13, color: "#b3b3b3", marginBottom: 4 };
-
-const submitStyle = {
-  background: "#8e2dd2",
-  color: "white",
-  border: "none",
-  padding: "10px 14px",
-  borderRadius: 8,
-  cursor: "pointer",
-  fontWeight: 600,
-};
-
-const xBtnStyle = {
-  background: "transparent",
-  border: "none",
-  color: "white",
-  fontSize: 24,
-  cursor: "pointer",
-  lineHeight: 1,
-};

@@ -74,7 +74,7 @@ export default function Settings() {
                 <Col>
                     <h2 style={{ fontWeight: 700 }}>Settings</h2>
                     <p className="text-secondary mb-0">
-                        Personalize your SpotiReelsTagram experience!
+                        Personalize your SpotiReels experience!
                     </p>
                 </Col>
             </Row>
