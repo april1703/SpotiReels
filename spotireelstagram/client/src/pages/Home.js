@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     async function getPlaylists() {
       try {
-        const token = localStorage.getItem("spotify_access_token");
+        const token = localStorage.getItem("accessToken");
         if (!token) {
           console.error("Missing Spotify access token.");
           return;
