@@ -45,22 +45,3 @@ CREATE TABLE liked_songs (
     PRIMARY KEY (username),
     FOREIGN KEY (username) REFERENCES users(username)
 )
-
--- FOR DEBUGGING PURPOSES ONLY, WILL BE REMOVED LATER
--- INSERT INTO users VALUES
--- ("testuser1",
---  "$2b$12$iE0iYgAs47Z/ROtJlzzOWeoFCE4nvHBFrudSTEicDbuuVCNmo4yBy",
---  "basicsalt123", 
---  TRUE, 
---  TRUE);
-
--- INSERT INTO users VALUES
--- ("testuser2",
---  "$2b$12$iE0iYgAs47Z/ROtJlzzOWeoFCE4nvHBFrudSTEicDbuuVCNmo4yBy",
---  "basicsalt123", 
---  TRUE, 
---  TRUE);
-
--- INSERT INTO following (username, user_following) VALUES
--- ("testuser1", "testuser2"),
--- ("testuser2", "testuser1");

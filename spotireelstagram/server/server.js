@@ -18,25 +18,48 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const ExistingUserSQLCheck = "SELECT username FROM users WHERE username = ?";
-const UserRegistrationSQL = "INSERT INTO users (username, password, salt, isDarkMode, isExplicit) VALUES (?, ?, ?, FALSE, FALSE)";
-const CheckInputPasswordSQL = "SELECT password, salt FROM users WHERE username = ?";
-const PasswordChangeSQL = "UPDATE users SET password = ?, salt = ? WHERE username = ?";
-const ChangeExplicitSQL = "UPDATE users SET isExplicit = ? WHERE username = ?";
-const AddFollowingSQL = "INSERT INTO following (username, user_following) VALUES (?, ?)"
+const SQL_REQUESTS = {
+  user: {
+    checkExisting: "SELECT username FROM users WHERE username = ?",
+    register: "INSERT INTO users (username, password, salt, isDarkMode, isExplicit) VALUES (?, ?, ?, FALSE, FALSE)",
+    checkPassword: "SELECT password, salt FROM users WHERE username = ?",
+    changePassword: "UPDATE users SET password = ?, salt = ? WHERE username = ?",
+    changeIsDarkMode: "UPDATE users SET isDarkMode = ? WHERE username = ?",
+    changeExplicit: "UPDATE users SET isExplicit = ? WHERE username = ?",
+  },
+
+  following: {
+    add: "INSERT INTO following (username, user_following) VALUES (?, ?)",
+    remove: "DELETE FROM following WHERE username = ? AND user_following = ?",
+    get: "SELECT user_following FROM following WHERE username = ?",
+  },
+
+  playlist: {
+    contents_add: "INSERT INTO playlist_contents (username, list_name, song) VALUES (?, ?, ?)",
+    contents_remove: "DELETE FROM playlist_contents WHERE username = ? AND list_name = ? AND song = ?",
+    contents_get: "SELECT song FROM playlist_contents WHERE username = ? AND list_name = ?",
+  },
+
+  liked: {
+    add: "INSERT INTO liked_songs (username, song) VALUES (?, ?)",
+    remove: "DELETE FROM liked_songs WHERE username = ? AND song = ?",
+    get: "SELECT song FROM liked_songs WHERE username = ?",
+  }
+};
 
 // SQL CONNECTION AND HEALTH CHECK
-const UserConnection = mysql.createConnection({
+const Connection = mysql.createConnection({
     host: SQL_HOST,
     user: SQL_USER,
     password: SQL_PASSWORD,
     database: "spottireels",
 });
-UserConnection.ping(err => {
+Connection.ping(err => {
   if (err) console.error("Ping failed:", err);
   else console.log("DB connection OK");
 });
 
+// SPOTIFY API CONNECTION
 app.post('/auth/refresh', (req, res) => {
     const refreshToken = req.body.refreshToken
     const spotifyApi = new SpotifyWebApi({
@@ -81,25 +104,25 @@ app.post('/auth/login', (req, res) => {
     })
 })
 
-
 app.listen(3001, () => {
     console.log('Server is running on port 3001');
 })
 
+// RETURN ID FUNCTION: takes nothing, returns network status and a string
 app.get('/spotify-id', (request, response) => {
     console.log(`User requested Spotify ID: ${SPOTIFY_CLIENT_ID}`);
     return response.status(200).json(SPOTIFY_CLIENT_ID);
     
 })
 
-//REGISTRATION FUNCTION: takes 4 strings, returns network status and message
+// REGISTRATION FUNCTION: takes 4 strings, returns network status and message
 app.post("/register", (request, response) => {
     // Register page passes username, password, checkPassword
     const {username, password} = request.body;
     if (checkRegex([username, password])) {
         return response.status(400).send("Invalid characters used.");
     }
-    UserConnection.query(ExistingUserSQLCheck, [username], (SQLerror, SQLresults) =>{
+    Connection.query(ExistingUserSQLCheck, [username], (SQLerror, SQLresults) =>{
         if (SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
@@ -113,7 +136,7 @@ app.post("/register", (request, response) => {
     .slice(0, 12);
     bcrypt.hash(newSalt + password + PEPPER, 12)
     .then(hashedPassword => {
-        UserConnection.query(UserRegistrationSQL, [username, hashedPassword, newSalt], (SQLerror, SQLresults) => {
+        Connection.query(SQL_REQUESTS.user.register, [username, hashedPassword, newSalt], (SQLerror, SQLresults) => {
             if (SQLerror) {
                 console.error(`BCrypt error: ${SQLerror.message}`);
                 return response.status(500).send(`Database error: ${SQLerror}`);
@@ -135,7 +158,7 @@ app.post("/login", (request, response) => {
     if (checkRegex([username, password])) {
         return response.status(403).send("Invalid characters in username or password");
     }
-    UserConnection.query(CheckInputPasswordSQL, [username], (SQLerror, SQLresults) => {
+    Connection.query(SQL_REQUESTS.user.checkPassword, [username], (SQLerror, SQLresults) => {
         if (SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
@@ -163,7 +186,7 @@ app.post("/changePassword", (request, response) => {
     if(checkRegex([username, currentPassword, proposedPassword])) {
         return response.status(403).send("Invalid characters in request body: Access denied.");
     }
-    UserConnection.query(CheckInputPasswordSQL, [username], (SQLerror, SQLresults) => {
+    Connection.query(SQL_REQUESTS.user.checkPassword, [username], (SQLerror, SQLresults) => {
         if (SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
@@ -182,7 +205,7 @@ app.post("/changePassword", (request, response) => {
                 .slice(0, 12);
                 bcrypt.hash(newSalt + password + PEPPER, 12)
                 .then(hashedPassword => {
-                    UserConnection.query(PasswordChangeSQL, [hashedPassword, newSalt, username], (SQLerror_2, SQLresults_2) => {
+                    Connection.query(SQL_REQUESTS.user.changePassword, [hashedPassword, newSalt, username], (SQLerror_2, SQLresults_2) => {
                         if (SQLerror_2) {
                         return response.status(500).send(`Database error on second try: ${SQLerror}`);
                         }
@@ -199,7 +222,7 @@ app.post("/changePassword", (request, response) => {
 // CHANGE LIGHTING MODE: takes a boolean and string, returns network status and message
 app.post("/changeLightingMode", (request, response) => {
     let {username, isLightingModeRequest} = request.body;
-    UserConnection.query(ChangeLightingModeSQL, [isLightingModeRequest, username], (SQLerror, SQLresults) => {
+    Connection.query(SQL_REQUESTS.user.changeIsDarkMode, [isLightingModeRequest, username], (SQLerror, SQLresults) => {
         if (SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
@@ -212,7 +235,7 @@ app.post("/changeLightingMode", (request, response) => {
 // CHANGE EXPLICIT: takes a boolean and string, returns network status and message
 app.post("/changeExplicit", (request, response) => {
     let {username, isExplicitRequest} = request.body;
-    UserConnection.query(ChangeExplicitSQL, [isExplicitRequest, username], (SQLerror, SQLresults) => {
+    Connection.query(SQL_REQUESTS.user.changeExplicit, [isExplicitRequest, username], (SQLerror, SQLresults) => {
         if (SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror.message}`);
         } else {
@@ -227,7 +250,7 @@ app.post("/addFollowing", (request, response) => {
     if(checkRegex([username, following_username])) {
         return response.status(403).message("Invalid characters in request body: Access denied.");
     }
-    UserConnection.query(AddFollowingSQL, [username, following_username], (SQLerror, SQLresults) => {
+    Connection.query(SQL_REQUESTS.following.add, [username, following_username], (SQLerror, SQLresults) => {
         if (SQLerror.errno === 1062) {
             return response.status(409).send(`User ${username} is already following ${following_username}.`);
         } else if (SQLerror) {
@@ -245,7 +268,7 @@ app.post("/removeFollowing", (request, response) => {
     if(checkRegex([username, following_username])) {
         return response.status(403).send("Invalid characters in request body: Access denied.");
     }
-    UserConnection.query(RemoveFollowingSQL, [username, following_username], (SQLerror, SQLresults) => {
+    Connection.query(SQL_REQUESTS.following.remove, [username, following_username], (SQLerror, SQLresults) => {
         if(SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror.message}`);
         } else {
@@ -254,25 +277,121 @@ app.post("/removeFollowing", (request, response) => {
     })
 })
 
-// RETRIEVE FOLLOWING: takes a string, returns network status, a message, and, on 200, a JSON body
+// GET FOLLOWING: takes a string, returns network status, a message, and, on 200, a JSON body
 app.post("/getFollowing", (request, response) => {
     let {username} = request.body;
     if(checkRegex([username])) {
         return response.status(403).send("Invalid characters in request body: Access denied.")
     }
-    UserConnection.query(GetFollowingListSQL, [username], (SQLerror, SQLresults) => {
+    Connection.query(SQL_REQUESTS.following.get, [username], (SQLerror, SQLresults) => {
         if (SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror.message}`);
         } else if (SQLresults.length === 0) {
             return response.status(404).send(`Cannot find following for user ${username}. Is ${username} following anyone?`);
         } else {
-            return response.status(200).send(`Found following for user ${username}`).json(SQLresults);
+            return response.status(200).json(SQLresults);
+        }
+    })
+})
+
+// ADD TO PLAYLIST: takes three strings, returns network status and message
+app.post("/addToPlaylist", (request, response) => {
+    let{username, list_name, song} = request.body;
+    if(checkRegex([username, list_name, song])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.playlist.contents_add, [username, list_name, song], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        } 
+        else {
+            return response.status(200).send(`Successfully added ${song} to ${username}\'s playlist ${list_name}`)
+        }
+    })
+})
+
+// REMOVE FROM PLAYLIST: takes three strings, returns network status and message
+app.post("/removeFromPlaylist", (request, response) => {
+    let {username, list_name, song} = request.body;
+    if(checkRegex([username, list_name, song])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.playlist.contents_remove, [username, list_name, song], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        }
+        else {
+            return response.status(200).send(`Successfully removed ${song} from ${username}\'s ${list_name}`)
+        }
+    })
+})
+
+// GET PLAYLIST: takes two strings, returns network status, a message, and, on 200, a JSON body 
+app.post("/getPlaylist", (request, response) => {
+    let {username, list_name} = request.body;
+    if(checkRegex([username, list_name, song])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.playlist.contents_get, [username, list_name], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        } else if (SQLresults.length === 0) {
+            return response.status(404).send("Error: Playlist not found")
+        } else {
+            return response.status(200).json(SQLresults)
+        }
+    })
+})
+
+// ADD TO LIKED: takes two strings, returns network status and message
+app.post("/addLiked", (request, response) => {
+    let {username, song} = request.body;
+    if(checkRegex([username, song])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.liked.add, [username, song], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        } else {
+            return response.status(200).send(`Song ${song} successfully added to ${username}\'s liked songs list`)
+        }
+    })
+})
+
+// REMOVE LIKED: takes two strings, returns network status and message
+app.post("/removeLiked", (request, response) => {
+    let {username, song} = request.body;
+    if(checkRegex([username, song])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.liked.remove, [username, song], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        } else {
+            return response.status(200).send(`Song ${song} successfully removed from ${username}\'s liked songs list`)
+        }
+    })
+})
+
+// GET LIKED: takes a string, returns network status, a message, and, on 200, a JSON body
+app.post("/getLiked", (request, response) => {
+    let {username, song} = request.body;
+    if(checkRegex([username, song])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.liked.get, [username], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        } else if (SQLresults.length === 0) {
+            return response.status(404).send(`Error: user ${username}\'s liked songs list is empty`)
+        } else {
+            return response.status(200).json(SQLresults)
         }
     })
 })
 
 //  HELPER FUNCTIONS
-//REGEX CHECK: takes an array, returns a boolean
+// REGEX CHECK: takes an array, returns a boolean
 const SQL_REGEX = /["':;(){}|\/\\]/;
 function checkRegex(listOfItems) {
     for (let i = 0; i < listOfItems.length; i++) {
