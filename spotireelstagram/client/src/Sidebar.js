@@ -1,4 +1,4 @@
-import { FaHome, FaSearch, FaBook, FaPlus, FaFilm, FaCog } from "react-icons/fa"
+import { FaHome, FaSearch, FaHeart, FaPlus, FaFilm, FaCog } from "react-icons/fa"
 
 const Sidebar = ({ onOpenCreatePlaylist }) => {
     const go = (path) => () => { 
@@ -34,7 +34,7 @@ const Sidebar = ({ onOpenCreatePlaylist }) => {
                 >
                     <button style={navButtonStyle} onClick={go("/home")}><FaHome />Home</button>
                     <button style={navButtonStyle} onClick={go("/search")}><FaSearch/>Search</button>
-                    <button style={navButtonStyle}><FaBook/>Library</button>
+                    <button style={navButtonStyle} onClick={go("/LikedSongs")}><FaHeart/>Liked Songs</button>
                     <button style={navButtonStyle} onClick={onOpenCreatePlaylist}><FaPlus/>New Playlist</button>
                     <button style={navButtonStyle}><FaFilm />Reels</button>
                     <button style={navButtonStyle} onClick={go("/settings")}><FaCog />Settings</button>

@@ -142,6 +142,29 @@ function makeSpotify({ accessToken, refreshToken } = {}) {
     return api;
 }
 
+async function getSpotifyFromReq(req) {
+    const auth = req.headers.authorization || '';
+    const accessToken = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+    let spotify;
+
+    if (accessToken) {
+        spotify = makeSpotify({ accessToken });
+        return spotify;
+    }
+
+    const refreshToken = req.body?.refreshToken || req.query?.refreshToken;
+    if (refreshToken) {
+        spotify = makeSpotify({ refreshToken });
+        const { body: rt } = await spotify.refreshAccessToken();
+        spotify.setAccessToken(rt.access_token);
+        return spotify;
+    }
+    
+    const err = new Error('Missing access token or refreshToken');
+    err.statusCode = 401;
+    throw err;
+}
+
 app.get('/spotify/liked', async (req, res) => {
     try {
         const safeLimit = Math.max(1, Math.min(50, Number(req.query.limit) || 50));
@@ -175,6 +198,7 @@ function flattenSavedTracks(body) {
             name: track.album?.name ?? '',
             images: track.album?.images ?? [],
         },
+        image: (track.album?.images?.[0]?.url) || '',
         duration_ms: track.duration_ms,
         preview_url: track.preview_url,
         uri: track.uri,
@@ -187,24 +211,18 @@ app.post('/spotify/like', async (req, res) => {
         const { refreshToken, trackId } = req.body || {};
         if (!refreshToken || !trackId) return res.status(400).json({ error: 'Missing refreshToken or trackId' });
 
-        const spotify = new SpotifyWebApi({
-            clientId: SPOTIFY_CLIENT_ID,
-            clientSecret: SPOTIFY_SECRET,
-            redirectUri: 'http://127.0.0.1:3000/auth/callback',
-        });
-        spotify.setRefreshToken(refreshToken);
-
+        const spotify = makeSpotify({ refreshToken });
         const { body: rt } = await spotify.refreshAccessToken();
         spotify.setAccessToken(rt.access_token);
 
         await spotify.addToMySavedTracks([trackId]);
 
-        res.json({ ok: true });
+        return res.json({ liked: true });
     } catch (err) {
         console.error('POST /spotify/like', err?.body || err);
         if (err?.statusCode === 403) return res.status(403).json({ error: 'missing_scope', scope: 'user-library-modify' });
         if (err?.statusCode === 401) return res.status(401).json({ error: 'unauthorized' });
-        res.status(500).json({ error: 'server_error' });
+        return res.status(500).json({ error: 'server_error' });
     }
 });
 
@@ -213,24 +231,53 @@ app.post('/spotify/unlike', async (req, res) => {
         const { refreshToken, trackId } = req.body || {};
         if (!refreshToken || !trackId) return res.status(400).json({ error: 'Missing refreshToken or trackId' });
 
-        const spotify = new SpotifyWebApi({
-            clientId: SPOTIFY_CLIENT_ID,
-            clientSecret: SPOTIFY_SECRET,
-            redirectUri: 'http://127.0.0.1:3000/auth/callback',
-        });
-        spotify.setRefreshToken(refreshToken);
-
+        const spotify = makeSpotify({ refreshToken });
         const { body: rt } = await spotify.refreshAccessToken();
         spotify.setAccessToken(rt.access_token);
 
         await spotify.removeFromMySavedTracks([trackId]);
 
-        res.json({ ok: true });
+        return res.json({ liked: true });
     } catch (err) {
         console.error('POST /spotify/unlike', err?.body || err);
         if (err?.statusCode === 403) return res.status(403).json({ error: 'missing_scope', scope: 'user-library-modify' });
         if (err?.statusCode === 401) return res.status(401).json({ error: 'unauthorized' });
-        res.status(500).json({ error: 'server_error' });
+        return res.status(500).json({ error: 'server_error' });
+    }
+});
+
+app.get('/spotify/like-status', async (req, res) => {
+    try {
+        const idsParam = (req.query.ids || '').trim();
+        if (!idsParam) return res.status(400).json({ error: 'Missing ids' });
+
+        const ids = idsParam.split(',').map(s => s.trim()).filter(Boolean).slice(0, 50);
+        if (!ids.length) return res.status(400).json({ error: 'No valid ids' });
+
+        let spotify;
+
+        const auth = req.headers.authorization || '';
+        const accessToken = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+        if (accessToken) {
+            spotify = makeSpotify({ accessToken });
+        } else if (req.query.refreshToken) {
+            spotify = makeSpotify({ refreshToken: req.query.refreshToken });
+            const { body: rt } = await spotify.refreshAccessToken();
+            spotify.setAccessToken(rt.access_token);
+        } else {
+            return res.status(401).json({ error: 'Missing access token or refreshToken' });
+        }
+
+        const { body } = await spotify.containsMySavedTracks(ids);
+
+        const map = {};
+        ids.forEach((id, i) => { map[id] = !!body[i]; });
+
+        return res.json({ likedMap: map });
+    } catch (err) {
+        console.error('GET /spotify/like-status', err?.body || err);
+        const status = err?.statusCode === 401 ? 401 : 500;
+        return res.status(status).json({ error: 'Failed to check like status' });
     }
 });
 
@@ -455,6 +502,34 @@ app.post("/removeFromPlaylist", (request, response) => {
         }
     })
 })
+
+app.get('/spotify/playlists', async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 24));
+    const offset = Math.max(0, Number(req.query.offset) || 0);
+
+    const spotify = await getSpotifyFromReq(req);
+    // current user's playlists
+    const { body } = await spotify.getUserPlaylists({ limit, offset });
+
+    const items = (body.items || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      images: p.images || [],
+      tracksTotal: p.tracks?.total ?? 0,
+      owner: p.owner?.display_name || '',
+      public: !!p.public,
+    }));
+
+    const total = body.total ?? items.length;
+    const nextOffset = offset + items.length < total ? offset + items.length : null;
+
+    res.json({ items, total, nextOffset });
+  } catch (err) {
+    console.error('GET /spotify/playlists', err?.body || err);
+    res.status(err?.statusCode || 500).json({ error: 'Failed to load playlists' });
+  }
+});
 
 // GET PLAYLIST: takes two strings, returns network status, a message, and, on 200, a JSON body 
 app.post("/getPlaylist", (request, response) => {

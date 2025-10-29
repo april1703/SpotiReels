@@ -9,6 +9,7 @@ import useAuth from './useAuth';
 import Settings from './pages/Settings';
 import Register from './pages/Register';
 import CreatePlaylistModal from './CreatePlaylistPopup';
+import LikedSongs from './pages/LikedSongs';
 
 //APP.JS EXPLANATION
 // main kinda global app component
@@ -41,9 +42,13 @@ export default function App() {
   const showLogin = !accessToken && !code && (path === '/' || path === '/login');
   if (showLogin) return <Login />;
 
+  const norm = path.toLowerCase();
+  const isLikedSongs = norm === '/likedsongs' || norm === '/liked-songs' || norm === '/likes' || norm === '/liked';
+
   let Content = null;
-  if (path === '/search') Content = <Search accessToken={accessToken} setTrackUri={setTrackUri} />;
-  else if (path === '/settings') Content = <Settings />;
+  if (norm === '/search') Content = <Search accessToken={accessToken} setTrackUri={setTrackUri} />;
+  else if (norm === '/settings') Content = <Settings />;
+  else if (isLikedSongs) Content = <LikedSongs accessToken={accessToken} setTrackUri={setTrackUri} />;
   else Content = <Home code={code} accessToken={accessToken} setTrackUri={setTrackUri} />;
 
   return (

@@ -1,68 +1,82 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import AddToPlaylistMenu from "../AddToPlaylistPopup";
+import "./Search.css";
 
 function readStoredToken() {
   return window.localStorage.getItem('accessToken') || ''
+}
+
+function readRefreshToken() {
+  try { return window.localStorage.getItem('refreshToken') || '' } catch { return '' }
+}
+
+async function likeOnServer(trackId) {
+  const refreshToken = readRefreshToken();
+  const r = await fetch('http://127.0.0.1:3001/spotify/like', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken, trackId })
+  });
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}));
+    throw new Error(j.error || `HTTP ${r.status}`);
+  }
+}
+
+async function unLikeOnServer(trackId) {
+  const refreshToken = readRefreshToken();
+  const r = await fetch('http://127.0.0.1:3001/spotify/unlike', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken, trackId })
+  });
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}));
+    throw new Error(j.error || `HTTP ${r.status}`);
+  }
 }
 
 function LikeButton({ checked, onChange, size = 26, color = "rgb(189, 91, 255)" }) {
   const [local, setLocal] = React.useState(!!checked);
   React.useEffect(() => setLocal(!!checked), [checked]);
 
-  const css = React.useMemo(
-    () => `
-    .heart-container {
-      --heart-color: ${color};
-      position: relative;
-      width: ${size}px;
-      height: ${size}px;
-      transition: .3s;
-      display: inline-flex;
-    }
-    .heart-container .svg-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
-    .heart-container .svg-outline, .heart-container .svg-filled { position: absolute; fill: var(--heart-color); }
-    .heart-container .svg-outline path { fill: none; stroke: currentColor; stroke-width: 1.7 }
-    .heart-container .svg-filled { display: none; animation: keyframes-svg-filled 1s; }
-    .heart-container .svg-celebrate { position: absolute; display: none; stroke: var(--heart-color); fill: var(--heart-color); stroke-width: 2px; animation: keyframes-svg-celebrate .5s forwards; }
-    .heart-container.liked .svg-filled { display: block; }
-    .heart-container.liked .svg-celebrate { display: block; }
-    @keyframes keyframes-svg-filled { 0% { transform: scale(0) } 25% { transform: scale(1.2) } 50% { transform: scale(1); filter: brightness(1.5) } }
-    @keyframes keyframes-svg-celebrate { 0% { transform: scale(0) } 50% { opacity: 1; filter: brightness(1.5) } 100% { transform: scale(1.4); opacity: 0; display: none } }`,
-    [size, color]
-  );
-
   const toggle = (ev) => {
-    ev.preventDefault?.(); ev.stopPropagation?.();
+    ev.preventDefault?.();
+    ev.stopPropagation?.();
     if (ev?.nativeEvent?.stopImmediatePropagation) ev.nativeEvent.stopImmediatePropagation();
-    const next = !local; setLocal(next); onChange?.(next);
+
+    const next = !local;
+    setLocal(next);
+    onChange?.(next);
   };
 
   return (
-    <>
-      <style>{css}</style>
-      <button
-        type="button"
-        className={`heart-container${local ? " liked" : ""}`}
-        onClick={toggle}
-        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-        aria-pressed={local}
-        title={local ? "Unlike" : "Like"}
-        style={{ background: "transparent", border: 0, padding: 0, cursor: "pointer" }}
-      >
-        <span className="svg-container" aria-hidden>
-          <svg className="svg-outline" viewBox="0 0 24 24" width={size} height={size}>
-            <path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 6.9 5.36 8.64c-1.78 1.78-1.78 4.66 0 6.44L12 21.72l6.64-6.64c1.78-1.78 1.78-4.66 0-6.44-1.74-1.74-4.78-1.82-6.54-.01z" />
-          </svg>
-          <svg className="svg-filled" viewBox="0 0 21 21" width={size} height={size}>
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41.81 4.5 2.09C12.09 4.81 13.76 4 15.5 4 18 4 20 6 20 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-          </svg>
-          <svg className="svg-celebrate" viewBox="0 0 24 24" width={size} height={size}>
-            <circle cx="4" cy="4" r="1.5"/><circle cx="20" cy="6" r="1.5"/>
-            <circle cx="18" cy="20" r="1.2"/><circle cx="6" cy="19" r="1.2"/>
-          </svg>
-        </span>
-      </button>
-    </>
+    <button
+      type="button"
+      className={`heart-container${local ? " liked" : ""}`}
+      onClick={toggle}
+      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      aria-pressed={local}
+      title={local ? "Unlike" : "Like"}
+      style={{ "--heart-color": color, "--heart-size": `${size}px` }}
+    >
+      <span className="svg-container" aria-hidden>
+        <svg className="svg-outline" viewBox="0 0 24 24" width={size} height={size}>
+          <path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 6.9 5.36 8.64c-1.78 1.78-1.78 4.66 0 6.44L12 21.72l6.64-6.64c1.78-1.78 1.78-4.66 0-6.44-1.74-1.74-4.78-1.82-6.54-.01z" />
+        </svg>
+
+        <svg className="svg-filled" viewBox="0 0 21 21" width={size} height={size}>
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41.81 4.5 2.09C12.09 4.81 13.76 4 15.5 4 18 4 20 6 20 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+
+        <svg className="svg-celebrate" viewBox="0 0 24 24" width={size} height={size}>
+          <circle cx="4" cy="4" r="1.5" />
+          <circle cx="20" cy="6" r="1.5" />
+          <circle cx="18" cy="20" r="1.2" />
+          <circle cx="6" cy="19" r="1.2" />
+        </svg>
+      </span>
+    </button>
   );
 }
 
@@ -264,17 +278,47 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
           >
             {/* Top-right actions */}
             <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 6 }}>
-              <LikeButton
-                checked={liked.has(key)}
-                onChange={() => toggleLike(key)}
-                size={24}
-                color="rgb(189, 91, 255)"
-              />
+              {pill === "Track" && (
+                <LikeButton
+                  checked={liked.has(key)}
+                  onChange={async (next) => {
+                    setLiked(prev => {
+                      const n = new Set(prev);
+                      next ? n.add(key) : n.delete(key);
+                      return n;
+                    });
+
+                    try {
+                      const trackId = key.split(':')[1];
+                      if (next) await likeOnServer(trackId);
+                      else await unLikeOnServer(trackId);
+                    } catch (e) {
+                      console.error('like toggle failed', e);
+                      setLiked(prev => {
+                        const n = new Set(prev);
+                        next ? n.delete(key) : n.add(key);
+                        return n;
+                      });
+                    }
+                  }}
+                  size={24}
+                  color="rgb(189, 91, 255"
+                />
+              )}
+
               {uri && (
                 <button
                   title="Add to playlist"
                   onClick={(e) => { e.stopPropagation(); openAdd(uri); }}
-                  style={{ background: "transparent", border: "1px solid #444", borderRadius: 8, padding: "4px 8px", color: "inherit", cursor: "pointer", fontSize: 12 }}
+                  style={{ 
+                    background: "transparent", 
+                    border: "1px solid #444", 
+                    borderRadius: 8,
+                    padding: "4px 8px",
+                    color: "inherit",
+                    cursor: "pointer",
+                    fontSize: 12
+                  }}
                 >
                   + Add
                 </button>
