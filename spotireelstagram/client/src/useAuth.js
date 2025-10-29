@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import axios from "axios"
 
 //USEAUTH EXPLANATION
@@ -16,36 +17,32 @@ export default function useAuth(code) {
     if (!code) return
 
     axios
-      .post("http://127.0.0.1:3001/auth/login", {
-        code,
-      })
+      .post("http://127.0.0.1:3001/auth/login", { code })
       .then(res => {
         setAccessToken(res.data.accessToken)
         setRefreshToken(res.data.refreshToken)
         setExpiresIn(res.data.expiresIn)
+        
         // has tokens in localstorage so it can be reused throughout the app in other pages
-        try {
-          if (res.data.accessToken) window.localStorage.setItem('accessToken', res.data.accessToken)
-          if (res.data.refreshToken) window.localStorage.setItem('refreshToken', res.data.refreshToken)
-        } catch (e) {}
-        window.history.pushState({}, null, "/")
-      })
+        localStorage.setItem("accessToken", res.data.accessToken);
+        localStorage.setItem("refreshToken", res.data.refreshToken);
+        window.history.pushState({}, null, "/");
+
+      })  
       .catch(() => {
         window.location = "/"
       })
   }, [code])
 
   useEffect(() => {
-    if (!refreshToken || !expiresIn) return
+    if (!refreshToken || !expiresIn) return;
     const interval = setInterval(() => {
       axios
-        .post("http://127.0.0.1:3001/auth/refresh", {
-          refreshToken,
-        })
+        .post("http://127.0.0.1:3001/auth/refresh", { refreshToken })
         .then(res => {
           setAccessToken(res.data.accessToken)
           setExpiresIn(res.data.expiresIn)
-          try { if (res.data.accessToken) window.localStorage.setItem('accessToken', res.data.accessToken) } catch (e) {}
+          localStorage.setItem("accessToken", res.data.accessToken);
         })
         .catch(() => {
           window.location = "/"
@@ -58,4 +55,16 @@ export default function useAuth(code) {
   return accessToken
 }
 
+export function AuthCallback() {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const code = params.get("code");
 
+  const accessToken = useAuth(code);
+
+  useEffect(() => {
+    if (accessToken) navigate("/home");
+  }, [accessToken, navigate]);
+
+  return <p>Authenticating with Spotify...</p>
+}
