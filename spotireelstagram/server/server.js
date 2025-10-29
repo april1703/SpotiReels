@@ -104,6 +104,136 @@ app.post('/auth/login', (req, res) => {
     })
 })
 
+app.post('/spotify/liked', async (req, res) => {
+    try {
+        const { refreshToken, limit = 50, offset = 0 } = req.body || {};
+        if (!refreshToken) return res.status(400).json({ error: 'Missing refreshToken' });
+
+        const safeLimit = Math.max(1, Math.min(50, Number(limit) || 50));
+        const safeOffset = Math.max(0, Number(offset) || 0);
+
+        const spotify = makeSpotify({ refreshToken });
+        const { body: refreshed } = await spotify.refreshAccessToken();
+        spotify.setAccessToken(refreshed.access_token);
+
+        const { body } = await spotify.getMySavedTracks({ limit: safeLimit, offset: safeOffset });
+
+        const items = flattenSavedTracks(body);
+        const total = body.total ?? items.length;
+        const nextOffset = safeOffset + items.length < total ? safeOffset + items.length : null;
+
+
+        return res.json({ items, total, nextOffset });
+    } catch (err) {
+        console.error('POST /spotify/liked error', err?.body || err);
+        const status = err?.statusCode || 500;
+        return res.status(status).json({ error: 'Failed to load liked songs' });
+    }
+});
+
+function makeSpotify({ accessToken, refreshToken } = {}) {
+    const api = new SpotifyWebApi({
+        clientId: SPOTIFY_CLIENT_ID,
+        clientSecret: SPOTIFY_SECRET,
+        redirectUri: 'http://127.0.0.1:3000/auth/callback',
+    });
+    if (accessToken) api.setAccessToken(accessToken);
+    if (refreshToken) api.setRefreshToken(refreshToken);
+    return api;
+}
+
+app.get('/spotify/liked', async (req, res) => {
+    try {
+        const safeLimit = Math.max(1, Math.min(50, Number(req.query.limit) || 50));
+        const safeOffset = Math.max(0, Number(req.query.offset) || 0);
+
+        const auth = req.headers.authorization || '';
+        const accessToken = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+        if (!accessToken) return res.status(401).json({ error: 'Missing Bearer access token' });
+
+        const spotify = makeSpotify({ accessToken });
+        const { body } = await spotify.getMySavedTracks({ limit: safeLimit, offset: safeOffset });
+        const items = flattenSavedTracks(body);
+        const total = body.total ?? items.length;
+        const nextOffset = safeOffset + items.length < total ? safeOffset + items.length : null;
+
+        res.json({ items, total, nextOffset });
+    } catch (err) {
+        console.error('GET /spotify/liked error', err?.body || err);
+        const status = err?.statusCode === 401 ? 401 : 500;
+        res.status(status).json({ error: 'Failed to load liked songs' });
+    }
+});
+
+function flattenSavedTracks(body) {
+    return (body.items || []).map(({ added_at, track }) => ({
+        id: track.id,
+        name: track.name,
+        artists: (track.artists || []).map(a => a.name).join(', '),
+        album: {
+            id: track.album?.id ?? null,
+            name: track.album?.name ?? '',
+            images: track.album?.images ?? [],
+        },
+        duration_ms: track.duration_ms,
+        preview_url: track.preview_url,
+        uri: track.uri,
+        added_at,
+    }));
+}
+
+app.post('/spotify/like', async (req, res) => {
+    try {
+        const { refreshToken, trackId } = req.body || {};
+        if (!refreshToken || !trackId) return res.status(400).json({ error: 'Missing refreshToken or trackId' });
+
+        const spotify = new SpotifyWebApi({
+            clientId: SPOTIFY_CLIENT_ID,
+            clientSecret: SPOTIFY_SECRET,
+            redirectUri: 'http://127.0.0.1:3000/auth/callback',
+        });
+        spotify.setRefreshToken(refreshToken);
+
+        const { body: rt } = await spotify.refreshAccessToken();
+        spotify.setAccessToken(rt.access_token);
+
+        await spotify.addToMySavedTracks([trackId]);
+
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('POST /spotify/like', err?.body || err);
+        if (err?.statusCode === 403) return res.status(403).json({ error: 'missing_scope', scope: 'user-library-modify' });
+        if (err?.statusCode === 401) return res.status(401).json({ error: 'unauthorized' });
+        res.status(500).json({ error: 'server_error' });
+    }
+});
+
+app.post('/spotify/unlike', async (req, res) => {
+    try {
+        const { refreshToken, trackId } = req.body || {};
+        if (!refreshToken || !trackId) return res.status(400).json({ error: 'Missing refreshToken or trackId' });
+
+        const spotify = new SpotifyWebApi({
+            clientId: SPOTIFY_CLIENT_ID,
+            clientSecret: SPOTIFY_SECRET,
+            redirectUri: 'http://127.0.0.1:3000/auth/callback',
+        });
+        spotify.setRefreshToken(refreshToken);
+
+        const { body: rt } = await spotify.refreshAccessToken();
+        spotify.setAccessToken(rt.access_token);
+
+        await spotify.removeFromMySavedTracks([trackId]);
+
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('POST /spotify/unlike', err?.body || err);
+        if (err?.statusCode === 403) return res.status(403).json({ error: 'missing_scope', scope: 'user-library-modify' });
+        if (err?.statusCode === 401) return res.status(401).json({ error: 'unauthorized' });
+        res.status(500).json({ error: 'server_error' });
+    }
+});
+
 app.listen(3001, () => {
     console.log('Server is running on port 3001');
 })
