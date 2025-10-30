@@ -36,6 +36,17 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
+  useEffect(() => {
+    const onPlay = (e) => {
+      const uri = e?.detail?.uri;
+      if (uri) setTrackUri(uri);
+    };
+    window.addEventListener('player:play', onPlay);
+    return () => window.removeEventListener('player:play', onPlay);
+  }, []);
+
+  const handlePlay = (uri) => setTrackUri(uri);
+
   if (path === '/register') return <Register />;
 
   // show Login only when no authorization has been made, which is used for Logout as well
@@ -43,13 +54,22 @@ export default function App() {
   if (showLogin) return <Login />;
 
   const norm = path.toLowerCase();
-  const isLikedSongs = norm === '/likedsongs' || norm === '/liked-songs' || norm === '/likes' || norm === '/liked';
+  const isLikedSongs = 
+    norm === '/likedsongs' || 
+    norm === '/liked-songs' || 
+    norm === '/likes' || 
+    norm === '/liked';
 
-  let Content = null;
-  if (norm === '/search') Content = <Search accessToken={accessToken} setTrackUri={setTrackUri} />;
-  else if (norm === '/settings') Content = <Settings />;
-  else if (isLikedSongs) Content = <LikedSongs accessToken={accessToken} setTrackUri={setTrackUri} />;
-  else Content = <Home code={code} accessToken={accessToken} setTrackUri={setTrackUri} />;
+  let Content;
+  if (norm === '/search') {
+    Content = <Search accessToken={accessToken} setTrackUri={handlePlay} />;
+  } else if (norm === '/settings') {
+    Content = <Settings />;
+  } else if (isLikedSongs) {
+    Content = <LikedSongs accessToken={accessToken} setTrackUri={handlePlay} />;
+  } else {
+    Content = <Home code={code} accessToken={accessToken} setTrackUri={handlePlay} />;
+  }
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -59,7 +79,17 @@ export default function App() {
         {Content}
       </div>
 
-      <div style={{ position: 'fixed', left: 220, right: 0, bottom: 0, padding: 0, zIndex: 200, backgroundColor: '#000000ff' }}>
+      <div 
+        style={{ 
+          position: 'fixed', 
+          left: 220, 
+          right: 0, 
+          bottom: 0, 
+          padding: 0, 
+          zIndex: 200, 
+          backgroundColor: '#000000ff' 
+        }}
+      >
         <Player accessToken={accessToken} trackUri={trackUri} />
       </div>
 
