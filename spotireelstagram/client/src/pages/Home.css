@@ -38,13 +38,13 @@
 .playlist-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 18px;
-  padding: 0 16px 32px 16px;
+  gap: 20px;
+  padding: 20px;
 }
 
 .playlist-card {
   background: #151515;
-  border: 1px solid #262626;
+  border: none;
   border-radius: 14px;
   padding: 10px;
   text-align: left;
@@ -57,12 +57,11 @@
   border-color: #333;
 }
 
-.playlist-image {
+.playlist-cover {
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 10px;
   object-fit: cover;
-  background: #222;
+  border-radius: 6px;
   margin-bottom: 10px;
 }
 

@@ -62,7 +62,9 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
       
       {loading ? (
         <p className='loading-text'>Loading playlists...</p>) :(
-        <div className="playlist-grid">{playlists.map(p => {
+        <div className="playlist-grid">
+        {playlists.map(p => {
+          const img = p.images?.[0]?.url || "https://via.placeholder.com/150?text=No+Cover";
           return (
               <button
                 key={p.id}
@@ -71,6 +73,10 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
                 title={`Open ${p.name}`}
                 style={{ textAlign: "left" }}
               >
+              <img 
+                src = {img}
+                alt={`${p.name} cover`}
+                className='playlist-cover'/>
                 <div className="playlist-card" key={p.id}>
                   <h3 className="playlist-name">{p.name}</h3>
                   <p className='playlist-tracks'>{p.tracks.total} songs</p>
