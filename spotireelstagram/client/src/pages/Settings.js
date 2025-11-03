@@ -83,12 +83,12 @@ export default function Settings() {
                         setMsg("Password changed successfully!");
                         break;
                     case 403:
-                        console.error("Invalid characters in POST body.");
-                        setMsg("Invalid characters in input.");
+                        console.error("Username or password does not match database");
+                        setMsg("Username or password doesn't match. characters in input.");
                         break;
                     case 404:
-                        console.error("Username or password does not match database");
-                        setMsg("Username or password doesn't match.");
+                        console.error("Not Found");
+                        setMsg("User not found");
                         break;
                     case 500:
                         console.error("Database error: " + data.msg);

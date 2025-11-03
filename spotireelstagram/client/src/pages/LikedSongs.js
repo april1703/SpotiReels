@@ -170,7 +170,16 @@ export default function LikedSongs({ setTrackUri }) {
 
       <div style={{ marginTop: 24 }}>
         {canLoadMore ? (
-          <button className="secondary-btn" disabled={loading} onClick={loadPage}>
+          <button className="secondary-btn" style = {{
+            backgroundColor: "#8e2dd2ff",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            padding: "6px 12px",
+            cursor: "pointer",
+            fontSize: "14px"
+          }} 
+          disabled={loading} onClick={loadPage}>
             {loading ? "Loading..." : "Load more"}
           </button>
         ) : (
