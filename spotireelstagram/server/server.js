@@ -380,7 +380,7 @@ app.post("/changePassword", (request, response) => {
                 let newSalt = crypto.randomBytes(Math.ceil(12 / 2))
                 .toString("hex")
                 .slice(0, 12);
-                bcrypt.hash(newSalt + password + PEPPER, 12)
+                bcrypt.hash(newSalt + proposedPassword + PEPPER, 12)
                 .then(hashedPassword => {
                     Connection.query(SQL_REQUESTS.user.changePassword, [hashedPassword, newSalt, username], (SQLerror_2, SQLresults_2) => {
                         if (SQLerror_2) {
