@@ -239,7 +239,20 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
           <option value="CA">CA</option>
           <option value="">Any</option>
         </select>
-        <button onClick={() => runSearch()}>Search</button>
+        <button 
+        type="submit" 
+        style={{
+          backgroundColor: "#8e2dd2ff",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          padding: "6px 12px",
+          cursor: "pointer",
+          fontSize: "14px"
+        }} 
+        onClick={() => runSearch()
+          
+        }>Search</button>
         <span style={{ color: "#000000ff" }}>{status}</span>
       </div>
 
