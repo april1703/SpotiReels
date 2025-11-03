@@ -1,4 +1,3 @@
-// src/pages/LikedSongs.js
 import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import "./Search.css";
 
@@ -150,7 +149,10 @@ export default function LikedSongs({ setTrackUri }) {
             </div>
 
             <div className="card-body">
-              <div className="pill pill--sm">Track</div>
+              <div className="title">
+                {it.name || it.title || it.track?.name}
+              </div>
+
               <div className="subtitle subtitle--sm">
                 {Array.isArray(it.artists) ? it.artists.join(", ") : it.artists}
               </div>
