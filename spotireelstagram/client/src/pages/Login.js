@@ -64,6 +64,11 @@ export default function Login() {
               console.log("Login successful, redirecting to home screen...");
               window.location.href = AUTH_URL;
               return;
+
+            case 403:
+              console.log("Incorrect password...");
+              setMessage("Incorrect password.");
+              break;
             
             case 404:
               console.error("Username or password does not match database");
