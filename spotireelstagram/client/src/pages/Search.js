@@ -231,6 +231,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
           <option value="track">Tracks</option>
           <option value="artist">Artists</option>
           <option value="album">Albums</option>
+          <option value="users">Friends</option>
         </select>
         <select value={market} onChange={(e) => { setMarket(e.target.value); runSearch(); }}>
           <option value="US">US</option>

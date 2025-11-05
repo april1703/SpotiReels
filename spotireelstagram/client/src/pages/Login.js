@@ -21,6 +21,14 @@ async function getSpotifyId() {
   }
 }
 
+// Retrieve cookie - send username to backend
+function getCookie(name) {
+  let value = `; ${document.cookie}`;
+  let parts = value.split(`; ${name}=`);
+  if (parts.length === 2)
+    return parts.pop().split(';').shift();
+}
+
 const SPOTIFY_ID = await getSpotifyId();
 const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_ID}&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state%20playlist-modify-public%20playlist-modify-private&show_dialog=true`;
 
@@ -52,7 +60,7 @@ export default function Login() {
         return;
       }
 
-      fetch("http://localhost:3001/login", {
+      fetch("http://127.0.0.1:3001/login", {
         method: "POST",
         headers: { "Content-Type": "application/json"},
         body: JSON.stringify({ username, password })
@@ -62,7 +70,22 @@ export default function Login() {
           switch(data.status) {
             case 200:
               console.log("Login successful, redirecting to home screen...");
-              window.location.href = AUTH_URL;
+              try {
+                const response = await data.json();
+                const token = response.token;
+
+                if (token) {
+                  document.cookie = `token=${token}; Path=/; SameSite=None; Strict`;
+                  console.log("JWT stored as cookie.");
+                  window.location.href = AUTH_URL;
+                } else{
+                  console.error("No token received in response")
+                  setMessage("ERROR HERE")
+                }
+              } catch(err) {
+                  console.log("Failed to parse response body: ", err);
+                  setMessage("ERROR HERE")
+              }
               return;
 
             case 403:

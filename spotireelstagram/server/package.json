@@ -21,6 +21,7 @@
     "crypto": "^1.0.1",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^2.3.3",
     "spotify-web-api-node": "^5.0.2"
   },

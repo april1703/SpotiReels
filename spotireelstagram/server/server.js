@@ -5,8 +5,10 @@ const express = require("express");
 const SpotifyWebApi = require("spotify-web-api-node");
 const cors = require("cors");
 const bodyParser = require('body-parser');
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+const JWT_SECRET = String(process.env.JWT_SECRET);
 const PEPPER = String(process.env.PEPPER);
 const SQL_HOST = String(process.env.MYSQL_HOST);
 const SQL_USER = String(process.env.MYSQL_USER);
@@ -96,7 +98,9 @@ app.post('/auth/login', (req, res) => {
             accessToken: data.body.access_token,
             refreshToken: data.body.refresh_token,
             expiresIn: data.body.expires_in,
-        })
+        }
+        
+    ) 
     })
     .catch(err => {
         console.log(err)
@@ -346,7 +350,8 @@ app.post("/login", (request, response) => {
         bcrypt.compare( SQLresults[0].salt + password + PEPPER, SQLresults[0].password)
         .then(isMatch => {
             if (isMatch) {
-                return response.status(200).send(`Password success; user ${username} logged in`);
+                const token = jwt.sign({username}, JWT_SECRET, {expiresIn: "2h"});
+                return response.status(200).json({token});
             } else {
                 return response.status(403).send("Incorrect password.");
             }
