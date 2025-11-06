@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
+import { ThemeContext } from "../ThemeContext";
+import ThemeSwitch from "../ThemeSwitch";
 
 const STORAGE_KEY = "app_settings_v1";
 const defaultSettings = {
@@ -34,9 +36,8 @@ export function logout() {
     window.location.reload();
 };
 
-
-
 export default function Settings() {
+    const { theme, toggleTheme, setTheme } = useContext(ThemeContext);
     const initial = useMemo(readSettings, []);
     const [settings, setSettings] = useState(initial);
     const [saved, setSaved] = useState(false);
@@ -49,7 +50,6 @@ export default function Settings() {
         checkPassword: '',
     })
     const [msg, setMsg] = useState("");
-    const [theme, setTheme] = useState("light");
     
     // PASSWORD CHANGE FUNCTION
     const handleSubmit = async (event) => {
@@ -115,66 +115,55 @@ export default function Settings() {
     
     // THEME TOGGLE
     const handleThemeChange = (e) => {
-        const newTheme = e.target.value;
-        setTheme(newTheme);
-    }
+        const next = e.target.value;
+        setTheme(next);
+        setSettings((s) => ({ ...s, theme: next }));
+    };
 
     useEffect(() => {
-        if (settings.theme === "dark") {
-            document.documentElement.classList.add("theme-dark");
-            document.documentElement.classList.remove("theme-light");
-        } else {
-            document.documentElement.classList.add("theme-light");
-            document.documentElement.classList.remove("theme-dark");
-        }}, [theme]);
-
-        useEffect(() => {
-
-        const storedUsername = localStorage.getItem("username");
-        if(!storedUsername) {
-            console.warn("No username found for lighting mode update")
+        const storedUsername =
+            formData.username || localStorage.getItem("username");
+        if (!storedUsername) {
             return;
         }
-        
-        const specialLightingMode = settings.theme === "dark";
+        const specialLightingMode = theme === "dark";
+
         fetch("http://localhost:3001/changeLightingMode", {
             method: "POST",
-            headers: { "Content-Type": "application/json"},
-            body: JSON.stringify({username: storedUsername, specialLightingMode})
-        })
-        .then(async (data) => {
-            switch(data.status) {
-                case 200:
-                    console.log("Lighting settings changed successfully");
-                    break;
-                case 500:
-                    console.error("Database error: " + data.message);
-                    break;
-                default:
-                    console.error("Unexpected response status: " + data.status);
-                }
-            })
-            .catch((err) => {
-                console.error("Unexpected error: " + err.message);
-            })
-        }, [theme, formData.username]);
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: storedUsername, specialLightingMode }),
+        }).catch(() => {});
+    }, [theme, formData.username]);
         
-        const onSave = (e) => {
-            e.preventDefault();
-            writeSettings(settings);
-            setSaved(true);
-            setTimeout(() => setSaved(false), 1600);
-        };
+    const onSave = (e) => {
+        e.preventDefault();
+        writeSettings({ ...settings, theme });
+        setSaved(true);
+        setTimeout(() => setSaved(false), 1600);
+    };
         
         
-        const onReset = () => {
-            setSettings(defaultSettings);
-        };
+    const onReset = () => {
+        setSettings(defaultSettings);
+        setTheme("dark");
+    };
         
 
     return (
         <Container fluid="md" className="py-4">
             <h2 style={{fontWeight: 700}}>Settings</h2>
+            <div className="p-3 mb-4 rounded" style={{ border: "1px solid var(--border)" }}>
+                <h4 className="mb-3">Appearance</h4>
+                <Row className="align-items-center">
+                    <Col md="auto">
+                        <ThemeSwitch />
+                    </Col>
+                    <Col>
+                        <div className="fw-semibold">Color theme</div>
+                        <div className="text-muted small">Changes apply instantly across the app.</div>
+                    </Col>
+                </Row>
+            </div>
             <h4 className="mb-4">Change Password</h4>
             {msg && (
                 <Alert
@@ -192,7 +181,7 @@ export default function Settings() {
             <Form onSubmit={handleSubmit}>
                 <Row className="mb-3">
                     <Col md={6}>
-                    <Form.Group controlID="username">
+                    <Form.Group controlId="username">
                         <Form.Label>Username</Form.Label>
                         <Form.Control
                         type="text"
@@ -203,7 +192,7 @@ export default function Settings() {
                     </Col>
                     
                     <Col md={6}>
-                    <Form.Group controlID="currentPassword">
+                    <Form.Group controlId="currentPassword">
                         <Form.Label>Current Password</Form.Label>
                         <Form.Control
                         type="password"
@@ -227,7 +216,7 @@ export default function Settings() {
                     </Col>
 
                     <Col md={6}>
-                        <Form.Group ControlID="checkPassword">
+                        <Form.Group controlId="checkPassword">
                             <Form.Label>Confirm New Password</Form.Label>
                             <Form.Control
                             type="password"
@@ -238,39 +227,53 @@ export default function Settings() {
                     </Col>
                 </Row>
 
-                <button
-                type="submit"
-                style={{
-                    backgroundColor: "#8e2dd2ff",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                    fontSize: "14px"
-                    }}
-                >
-                    Change Password
-                </button>
-
-                <button
-                    onClick={logout}
-                    className="ms-auto"
-                    variant="outline-danger"
-                    style={{
-                    position: "fixed",
-                    right: "35px",
-                    backgroundColor: "#8e2dd2ff",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                    fontSize: "14px"
-                    }}
+                <div className="d-flex align-items-center gap-2 mb-5">
+                    <button
+                        type="submit"
+                        style={{
+                            backgroundColor: "#8e2dd2ff",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "5px",
+                            padding: "6px 12px",
+                            cursor: "pointer",
+                            fontSize: "14px"
+                        }}
+                    >
+                        Change Password
+                    </button>
+                    
+                    <Button
+                        onClick={logout}
+                        className="ms-auto"
+                        variant="outline-danger"
+                        style={{ 
+                            backgroundColor: "#8e2dd2ff",
+                            color: "white",
+                            border: "none"
+                        }}
                     >
                         Logout
-                    </button>
+                    </Button>
+                </div>
+
+                <div className="mt-2 d-flex gap-2">
+                    <Button
+                        onClick={onSave}
+                        title="Save general preferences"
+                        style={{
+                            backgroundColor: "#8e2dd2ff",
+                            color: "white",
+                            border: "none",
+                        }}
+                    >
+                        Save Preferences
+                    </Button>
+
+                    <Button variant="outline-secondary" onClick={onReset}>
+                        Reset to Defaults
+                    </Button>
+                </div>
             </Form>    
         </Container>
     );

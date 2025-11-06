@@ -67,10 +67,6 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
     <Container fluid className="home-container">
       {/*fixed navbar so its aligned with everything*/}
       <div className="navbar">
-        <div className='navbar-buttons'>
-          <button onClick={minimize} className='window-button' title="Minimize"><FaMinus /></button>
-          <button onClick={close} className='window-button' title="Close"><FaTimes /></button>
-        </div>
       </div>
       <div className='navbar-space'/>
       

@@ -1,5 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Search from './pages/Search';
@@ -8,8 +8,11 @@ import Player from './Player';
 import useAuth from './useAuth';
 import Settings from './pages/Settings';
 import Register from './pages/Register';
-import CreatePlaylistModal from './CreatePlaylistPopup';
 import LikedSongs from './pages/LikedSongs';
+import CreatePlaylistModal from './CreatePlaylistPopup';
+import './theme.css';
+import { ThemeContext, ThemeProvider } from './ThemeContext';
+
 
 //APP.JS EXPLANATION
 // main kinda global app component
@@ -72,33 +75,32 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
-      <Sidebar onOpenCreatePlaylist={() => setShowCreate(true)} />
-
-      <div style={{ marginLeft: 220, padding: '80px 24px 120px 24px' }}>
-        {Content}
+    <ThemeProvider>
+      <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
+        <Sidebar onOpenCreatePlaylist={() => setShowCreate(true)} />
+        <div style={{ marginLeft: 220, padding: '80px 24px 120px 24px' }}>
+          {Content}
+        </div>
+        <div
+          style={{
+            position: 'fixed',
+            left: 220,
+            right: 0,
+            bottom: 0,
+            padding: 0,
+            zIndex: 200,
+            background: 'var(--bg)',
+            borderTop: '1px solid var(--border)'
+          }}
+        >
+          <Player accessToken={accessToken} trackUri={trackUri} />
+        </div>
+        <CreatePlaylistModal
+          accessToken={accessToken}
+          isOpen={showCreate}
+          onClose={() => setShowCreate(false)}
+        />
       </div>
-
-      <div 
-        style={{ 
-          position: 'fixed', 
-          left: 220, 
-          right: 0, 
-          bottom: 0, 
-          padding: 0, 
-          zIndex: 200, 
-          backgroundColor: '#000000ff' 
-        }}
-      >
-        <Player accessToken={accessToken} trackUri={trackUri} />
-      </div>
-
-      <CreatePlaylistModal
-        accessToken={accessToken}
-        isOpen={showCreate}
-        onClose={() => setShowCreate(false)}
-        seedTrackUri={trackUri}
-      />
-    </div>
+    </ThemeProvider>
   );
 }
