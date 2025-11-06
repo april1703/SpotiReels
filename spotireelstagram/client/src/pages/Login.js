@@ -8,7 +8,6 @@ import "./Login.css";
 //initially asks user to consent to their Spotify being used after hitting Login
 //redirects to login page.
 
-//put your client id after where it says client_id and in between &
 async function getSpotifyId() {
   try {
     const res = await fetch("http://localhost:3001/spotify-id");
@@ -77,6 +76,7 @@ export default function Login() {
               if (token) {
                 console.log("JWT stored as cookie.");
                 document.cookie = `token=${token}; Path=/; SameSite=None; Secure`;
+                window.localStorage.setItem('currentUser', username);
                 window.location.href = AUTH_URL;
                 console.log(`token=${token}`);
                 } else{
