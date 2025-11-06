@@ -20,6 +20,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+
 const SQL_REQUESTS = {
   user: {
     checkExisting: "SELECT username FROM users WHERE username = ?",

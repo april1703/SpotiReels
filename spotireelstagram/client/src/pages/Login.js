@@ -40,11 +40,11 @@ export default function Login() {
 
   const [formData, setFormData] = useState({username: '', password: ''});
   const [message, setMessage] = useState('');
-
+  
   // Handles inputs
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prevData) => ({
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
           ...prevData,
           [name]: value,
         }));
@@ -52,7 +52,7 @@ export default function Login() {
 
     const handleSubmit = (event) => {
       event.preventDefault();
-
+      
       const { username, password } = formData;
       
       if (!username || !password ) {
@@ -64,20 +64,21 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json"},
         body: JSON.stringify({ username, password })
-
+        
       })
-       .then(async (data) => {
-          switch(data.status) {
-            case 200:
-              console.log("Login successful, redirecting to home screen...");
-              try {
-                const response = await data.json();
-                const token = response.token;
-
-                if (token) {
-                  document.cookie = `token=${token}; Path=/; SameSite=None; Strict`;
-                  console.log("JWT stored as cookie.");
-                  window.location.href = AUTH_URL;
+      .then(async (data) => {
+        switch(data.status) {
+          case 200:
+            console.log("Login successful, redirecting to home screen...");
+            try {
+              const response = await data.json();
+              const token = response.token;
+              
+              if (token) {
+                console.log("JWT stored as cookie.");
+                document.cookie = `token=${token}; Path=/; SameSite=None; Secure`;
+                window.location.href = AUTH_URL;
+                console.log(`token=${token}`);
                 } else{
                   console.error("No token received in response")
                   setMessage("ERROR HERE")

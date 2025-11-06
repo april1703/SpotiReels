@@ -4,11 +4,20 @@ import { FaMinus, FaTimes } from "react-icons/fa"
 import "./Home.css";
 import PlaylistContentPopup from "./PlaylistContentPopup.jsx";
 
+// Retrieve cookie - send username to backend
+function getCookie(name) {
+  let value = `; ${document.cookie}`;
+  let parts = value.split(`; ${name}=`);
+  if (parts.length === 2)
+    return parts.pop().split(';').shift();
+}
+
 export default function Home({ accessToken, setTrackUri }) { // <— add setTrackUri so the popup can play
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [openId, setOpenId] = useState(null); // <— selected playlist id to open popup
+  const token = getCookie('token');
 
   const headers = useMemo(() => (
     accessToken ? { Authorization: `Bearer ${accessToken}` } : null
@@ -36,7 +45,12 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
           url = data.next; // page through results
           if (cancelled) return;
         }
-        if (!cancelled) setPlaylists(all);
+        if (!cancelled) {
+          setPlaylists(all);
+          document.cookie = `token=${token}; Path=/; SameSite=None; Strict`;
+          console.log(`token=${token}`);
+        }
+
       } catch (e) {
         if (!cancelled) setErr("Couldn't load playlists. Check login/scopes.");
       } finally {
