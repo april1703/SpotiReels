@@ -36,7 +36,7 @@ const Sidebar = ({ onOpenCreatePlaylist }) => {
                     <button style={navButtonStyle} onClick={go("/search")}><FaSearch/>Search</button>
                     <button style={navButtonStyle} onClick={go("/LikedSongs")}><FaHeart/>Liked Songs</button>
                     <button style={navButtonStyle} onClick={onOpenCreatePlaylist}><FaPlus/>New Playlist</button>
-                    <button style={navButtonStyle}><FaFilm />Reels</button>
+                    <button style={navButtonStyle} onClick={go("/reels")}><FaFilm />Reels</button>
                     <button style={navButtonStyle} onClick={go("/settings")}><FaCog />Settings</button>
                 </div>
         </div>
