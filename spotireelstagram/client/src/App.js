@@ -12,6 +12,7 @@ import LikedSongs from './pages/LikedSongs';
 import CreatePlaylistModal from './CreatePlaylistPopup';
 import './theme.css';
 import { ThemeContext, ThemeProvider } from './ThemeContext';
+import Reels from './pages/Reels';
 
 
 //APP.JS EXPLANATION
@@ -70,6 +71,8 @@ export default function App() {
     Content = <Settings />;
   } else if (isLikedSongs) {
     Content = <LikedSongs accessToken={accessToken} setTrackUri={handlePlay} />;
+  } else if (norm === '/reels') {
+    Content = <Reels accessToken={accessToken} setTrackUri={handlePlay} />;
   } else {
     Content = <Home code={code} accessToken={accessToken} setTrackUri={handlePlay} />;
   }
