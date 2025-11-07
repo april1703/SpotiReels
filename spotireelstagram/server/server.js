@@ -17,7 +17,10 @@ const SPOTIFY_CLIENT_ID = String(process.env.SPOTIFY_CLIENT_ID);
 const SPOTIFY_SECRET = String(process.env.SPOTIFY_SECRET);
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: ["http://127.0.0.1:3000", "http://localhost:3000"],
+    credentials: true
+}));
 app.use(bodyParser.json());
 
 
@@ -335,32 +338,37 @@ app.post("/register", (request, response) => {
 });
 
 // LOGIN FUNCTION: takes 2 strings, returns network status and message
-app.post("/login", (request, response) => {
-    let {username, password} = request.body;
-    if (checkRegex([username, password])) {
-        return response.status(403).send("Invalid characters in username or password");
-    }
-    Connection.query(SQL_REQUESTS.user.checkPassword, [username], (SQLerror, SQLresults) => {
-        if (SQLerror) {
-            return response.status(500).send(`Database error: ${SQLerror.message}`);
-        }
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  if (checkRegex([username, password])) {
+    return res.status(403).send("Invalid characters in username or password");
+  }
 
-        if (SQLresults.length === 0) {
-            return response.status(404).send("User not found");
-        }
-        bcrypt.compare( SQLresults[0].salt + password + PEPPER, SQLresults[0].password)
-        .then(isMatch => {
-            if (isMatch) {
-                const token = jwt.sign({username}, JWT_SECRET, {expiresIn: "2h"});
-                return response.status(200).json({token});
-            } else {
-                return response.status(403).send("Incorrect password.");
-            }
+  Connection.query(
+    "SELECT username, password, salt FROM users WHERE username = ?",
+    [username],
+    (err, results) => {
+      if (err) return res.status(500).send("Database error");
+      if (results.length === 0) return res.status(404).send("User not found");
+
+      const user = results[0];
+
+      bcrypt.compare(user.salt + password + PEPPER, user.password)
+        .then(match => {
+          if (!match) return res.status(403).send("Incorrect password.");
+
+          // ✅ Set readable cookie name & correct value
+          res.cookie("username", user.username, {
+            httpOnly: false,
+            sameSite: "lax",
+            secure: false
+          });
+
+          return res.status(200).json({ username: user.username });
         })
-        .catch(bCryptError => {
-            return response.status(500).send(`Encryption error: ${bCryptError.message}`);
-        });
-    });
+        .catch(() => res.status(500).send("Encryption error"));
+    }
+  );
 });
 
 // CHANGE PASSWORD FUNCTION: takes 3 strings, returns network status and message

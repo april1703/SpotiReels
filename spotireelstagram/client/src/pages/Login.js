@@ -1,6 +1,7 @@
 import { Container } from 'react-bootstrap'
 import { FaSpotify } from "react-icons/fa"
 import { useState } from "react";
+import { useCookies } from "react-cookie";
 import "./Login.css";
 
 //LOGIN PAGE EXPLAINED
@@ -20,14 +21,6 @@ async function getSpotifyId() {
   }
 }
 
-// Retrieve cookie - send username to backend
-function getCookie(name) {
-  let value = `; ${document.cookie}`;
-  let parts = value.split(`; ${name}=`);
-  if (parts.length === 2)
-    return parts.pop().split(';').shift();
-}
-
 const SPOTIFY_ID = await getSpotifyId();
 const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_ID}&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state%20playlist-modify-public%20playlist-modify-private&show_dialog=true`;
 
@@ -39,6 +32,7 @@ export default function Login() {
 
   const [formData, setFormData] = useState({username: '', password: ''});
   const [message, setMessage] = useState('');
+  const [cookies, setCookie] = useCookies(['username']);
   
   // Handles inputs
   const handleChange = (e) => {
@@ -62,6 +56,7 @@ export default function Login() {
       fetch("http://127.0.0.1:3001/login", {
         method: "POST",
         headers: { "Content-Type": "application/json"},
+        credentials: "include",
         body: JSON.stringify({ username, password })
         
       })
@@ -69,24 +64,7 @@ export default function Login() {
         switch(data.status) {
           case 200:
             console.log("Login successful, redirecting to home screen...");
-            try {
-              const response = await data.json();
-              const token = response.token;
-              
-              if (token) {
-                console.log("JWT stored as cookie.");
-                document.cookie = `token=${token}; Path=/; SameSite=None; Secure`;
-                window.localStorage.setItem('currentUser', username);
-                window.location.href = AUTH_URL;
-                console.log(`token=${token}`);
-                } else{
-                  console.error("No token received in response")
-                  setMessage("ERROR HERE")
-                }
-              } catch(err) {
-                  console.log("Failed to parse response body: ", err);
-                  setMessage("ERROR HERE")
-              }
+            window.location.href = AUTH_URL;
               return;
 
             case 403:
@@ -119,7 +97,7 @@ export default function Login() {
 
   return (
     <Container fluid className="login-container">
-
+    
     <form className="login-form" onSubmit={handleSubmit}>
 
       {/* Spotify Icon */}
@@ -137,17 +115,17 @@ export default function Login() {
         type="text"
         name="username"
         placeholder='Username'
-        value={formData.username}
-        onChange={handleChange}
+        value={formData.username} 
+        onChange={handleChange} 
         className='login-input'
         />
 
         <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
+          type="password" 
+          name="password" 
+          placeholder="Password" 
+          value={formData.password} 
+          onChange={handleChange} 
           className='login-input'
           />
 

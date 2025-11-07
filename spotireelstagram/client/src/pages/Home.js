@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { FaMinus, FaTimes } from "react-icons/fa"
 import "./Home.css";
 import PlaylistContentPopup from "./PlaylistContentPopup.jsx";
+import {useCookies} from 'react-cookie';
 
 // Retrieve cookie - send username to backend
 function getCookie(name) {
@@ -17,7 +18,7 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [openId, setOpenId] = useState(null); // <— selected playlist id to open popup
-  const token = getCookie('token');
+  const [cookies] = useCookies(['username']);
 
   const headers = useMemo(() => (
     accessToken ? { Authorization: `Bearer ${accessToken}` } : null
@@ -29,6 +30,10 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
   useEffect(() => {
     if (!headers) return;
     let cancelled = false;
+
+    if(!Cookies.username) {
+      window.location.href = "/login";
+    }
 
     (async () => {
       setLoading(true);
