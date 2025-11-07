@@ -7,9 +7,7 @@ const STORAGE_KEY = "app_settings_v1";
 const defaultSettings = {
     displayName: "",
     theme: "dark",
-    audioQuality: "high",
     allowExplicit: true,
-    country: "US",
     autoplayPreview: true,
 };
 
@@ -150,9 +148,9 @@ export default function Settings() {
 
     return (
         <Container fluid="md" className="py-4">
-            <h2 style={{fontWeight: 700}}>Settings</h2>
+            <h2 style={{fontWeight: 700, color: "#8e2dd2ff"}}>Settings</h2>
             <div className="p-3 mb-4 rounded" style={{ border: "1px solid var(--border)" }}>
-                <h4 className="mb-3">Appearance</h4>
+                <h4 className="mb-3" style={{color: "#8e2dd2ff"}}>Appearance</h4>
                 <Row className="align-items-center">
                     <Col md="auto">
                         <div className="theme_toggle-wrap">
@@ -161,12 +159,12 @@ export default function Settings() {
                         </div>
                     </Col>
                     <Col>
-                        <div className="fw-semibold">Color theme</div>
+                        <div className="fw-semibold" style={{color:"#8e2dd2ff"}}>Color theme</div>
                         <div className="text-muted small">Changes apply instantly across the app.</div>
                     </Col>
                 </Row>
             </div>
-            <h4 className="mb-4">Change Password</h4>
+            <h4 className="mb-4" style={{color: "#8e2dd2ff"}}>Change Password</h4>
             {msg && (
                 <Alert
                 variant = {
@@ -184,7 +182,7 @@ export default function Settings() {
                 <Row className="mb-3">
                     <Col md={6}>
                     <Form.Group controlId="username">
-                        <Form.Label>Username</Form.Label>
+                        <Form.Label style={{color: "#8e2dd2ff"}}>Username</Form.Label>
                         <Form.Control
                         type="text"
                         name="username"
@@ -195,7 +193,7 @@ export default function Settings() {
                     
                     <Col md={6}>
                     <Form.Group controlId="currentPassword">
-                        <Form.Label>Current Password</Form.Label>
+                        <Form.Label style={{color: "#8e2dd2ff"}}>Current Password</Form.Label>
                         <Form.Control
                         type="password"
                         name="currentPassword"
@@ -208,7 +206,7 @@ export default function Settings() {
                 <Row className="mb-3">
                     <Col md={6}>
                     <Form.Group controlId="newPassword">
-                        <Form.Label>New Password</Form.Label>
+                        <Form.Label style={{color: "#8e2dd2ff"}}>New Password</Form.Label>
                         <Form.Control
                         type="password"
                         name="newPassword"
@@ -219,7 +217,7 @@ export default function Settings() {
 
                     <Col md={6}>
                         <Form.Group controlId="checkPassword">
-                            <Form.Label>Confirm New Password</Form.Label>
+                            <Form.Label style={{color:"#8e2dd2ff"}}>Confirm New Password</Form.Label>
                             <Form.Control
                             type="password"
                             name="checkPassword"

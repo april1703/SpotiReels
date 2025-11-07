@@ -129,7 +129,7 @@ export default function LikedSongs({ setTrackUri }) {
 
   return (
     <div className="page">
-      <h1 className="page-title">Liked Songs</h1>
+      <h1 className="page-title" style={{color:"#8e2dd2ff"}}>Liked Songs</h1>
 
       {error && <div className="banner-error">{error}</div>}
 

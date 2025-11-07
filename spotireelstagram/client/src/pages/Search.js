@@ -216,11 +216,11 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
 
   return (
     <div style={{ padding: 16 }}>
-      <h2>Spotify Search</h2>
+      <h2 style= {{color: "#8e2dd2ff"}}>Spotify Search</h2>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
         <input
-          style={{ flex: 1, padding: 10, fontSize: 16 }}
+          style={{ flex: 1, padding: 10, fontSize: 16, }}
           type="search"
           placeholder="Search tracks, artists, albums..."
           value={q}
@@ -329,7 +329,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
                     border: "1px solid #444", 
                     borderRadius: 8,
                     padding: "4px 8px",
-                    color: "inherit",
+                    color: "#8e2dd2ff",
                     cursor: "pointer",
                     fontSize: 12
                   }}
@@ -346,9 +346,9 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
               style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", background: "#222" }}
             />
             <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start", }}>
-              <span style={{ display: "inline-block", padding: "2px 8px", fontSize: 12, borderRadius: 999, border: "1px solid #444" }}>{pill}</span>
-              <div style={{ fontWeight: 600, lineHeight: 1.2 }} dangerouslySetInnerHTML={{__html: escapeHtml(title) }} />
-              <div style={{ color: "#ffffffff", fontSize: 13 }} dangerouslySetInnerHTML={{__html: escapeHtml(subtitle || "") }} />
+              <span style={{ color: "#8e2dd2ff", display: "inline-block", padding: "2px 8px", fontSize: 12, borderRadius: 999, border: "1px solid #444" }}>{pill}</span>
+              <div style={{ color: "#8e2dd2ff", fontWeight: 600, lineHeight: 1.2 }} dangerouslySetInnerHTML={{__html: escapeHtml(title) }} />
+              <div style={{ color: "#8e2dd2ff", fontSize: 13 }} dangerouslySetInnerHTML={{__html: escapeHtml(subtitle || "") }} />
             </div>
           </div>
         ))}
