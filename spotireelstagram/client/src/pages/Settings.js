@@ -149,12 +149,14 @@ export default function Settings() {
     return (
         <Container fluid="md" className="py-4">
             <h2 style={{fontWeight: 700, color: "#8e2dd2ff"}}>Settings</h2>
-            <div className="p-3 mb-4 rounded" style={{ border: "1px solid var(--border)" }}>
+                <Row className="align-items-start">
+                
+                {/* Appearance Section */}
+                <Col md={6} className="p-3 mb-4 rounded" style={{ border: "1px solid var(--border)" }}>
                 <h4 className="mb-3" style={{color: "#8e2dd2ff"}}>Appearance</h4>
                 <Row className="align-items-center">
                     <Col md="auto">
                         <div className="theme_toggle-wrap">
-
                         <ThemeSwitch/>
                         </div>
                     </Col>
@@ -163,7 +165,17 @@ export default function Settings() {
                         <div className="text-muted small">Changes apply instantly across the app.</div>
                     </Col>
                 </Row>
-            </div>
+                </Col>
+                
+                {/* Following Section */}
+                    <Col md={6} className="p-3 mb-4 rounded" style={{ border: "1px solid var(--border)" }}>
+                    <h4 className="mb-3" style={{color: "#8e2dd2ff"}}>Following</h4>
+                    <button className="btn btn-primary" style={{backgroundColor: "#8e2dd2ff", border: "none", borderRadius: "5px"}}>
+                        Manage Following
+                    </button>
+                    </Col>
+                </Row>
+          
             <h4 className="mb-4" style={{color: "#8e2dd2ff"}}>Change Password</h4>
             {msg && (
                 <Alert
