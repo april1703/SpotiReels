@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
-import { ThemeContext } from "../ThemeContext";
-import ThemeSwitch from "../ThemeSwitch";
+import {ThemeContext, ThemeSwitch} from "./ThemeSwitch";
+import "./theme.css"
 
 const STORAGE_KEY = "app_settings_v1";
 const defaultSettings = {
@@ -37,7 +37,7 @@ export function logout() {
 };
 
 export default function Settings() {
-    const { theme, toggleTheme, setTheme } = useContext(ThemeContext);
+    const { theme, setTheme } = useContext(ThemeContext);
     const initial = useMemo(readSettings, []);
     const [settings, setSettings] = useState(initial);
     const [saved, setSaved] = useState(false);
@@ -114,10 +114,9 @@ export default function Settings() {
         };
     
     // THEME TOGGLE
-    const handleThemeChange = (e) => {
-        const next = e.target.value;
-        setTheme(next);
-        setSettings((s) => ({ ...s, theme: next }));
+    const handleThemeChange = (nextTheme) => {
+        setTheme(nextTheme);
+        setSettings((prev) => ({ ...prev, theme: nextTheme }));
     };
 
     useEffect(() => {
@@ -137,7 +136,7 @@ export default function Settings() {
         
     const onSave = (e) => {
         e.preventDefault();
-        writeSettings({ ...settings, theme });
+        writeSettings(settings);
         setSaved(true);
         setTimeout(() => setSaved(false), 1600);
     };
@@ -156,7 +155,10 @@ export default function Settings() {
                 <h4 className="mb-3">Appearance</h4>
                 <Row className="align-items-center">
                     <Col md="auto">
-                        <ThemeSwitch />
+                        <div className="theme_toggle-wrap">
+
+                        <ThemeSwitch/>
+                        </div>
                     </Col>
                     <Col>
                         <div className="fw-semibold">Color theme</div>

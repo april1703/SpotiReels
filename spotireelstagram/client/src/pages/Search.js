@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import AddToPlaylistMenu from "../AddToPlaylistPopup";
+import AddToPlaylistMenu from "./AddToPlaylistPopup";
 import "./Search.css";
 
 function readStoredToken() {

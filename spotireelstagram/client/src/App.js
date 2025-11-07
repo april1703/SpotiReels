@@ -3,15 +3,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Search from './pages/Search';
-import Sidebar from './Sidebar';
-import Player from './Player';
-import useAuth from './useAuth';
+import {Sidebar, Player} from './pages/Sidebar';
+import useAuth from './pages/useAuth';
 import Settings from './pages/Settings';
 import Register from './pages/Register';
 import LikedSongs from './pages/LikedSongs';
-import CreatePlaylistModal from './CreatePlaylistPopup';
-import './theme.css';
-import { ThemeContext, ThemeProvider } from './ThemeContext';
+import CreatePlaylistModal from './pages/CreatePlaylistPopup';
+import './pages/theme.css';
+import { ThemeContext, ThemeProvider } from './pages/ThemeSwitch';
 import Reels from './pages/Reels';
 
 

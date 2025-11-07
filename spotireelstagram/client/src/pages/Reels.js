@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import "./Reels.css";
-import AddToPlaylistPopup from "../AddToPlaylistPopup.jsx";
+import AddToPlaylistPopup from "./AddToPlaylistPopup.jsx";
 
 /*local storage helpers (per-user bucket)*/
 function getCurrentUser() {
