@@ -48,6 +48,17 @@ const SQL_REQUESTS = {
     add: "INSERT INTO liked_songs (username, song) VALUES (?, ?)",
     remove: "DELETE FROM liked_songs WHERE username = ? AND song = ?",
     get: "SELECT song FROM liked_songs WHERE username = ?",
+  },
+  post: {
+    add: "INSERT INTO posts (post_ID, username, song, body, time_stamp) VALUES (?, ?, ?, ?, ?)",
+    remove: "DELETE FROM posts WHERE username = ? AND post_ID = ?",
+    get_user: "SELECT * FROM posts WHERE username = ?",
+    get_following: "SELECT p.* FROM posts p JOIN following f ON f.user_following = p.username WHERE f.username = ? ORDER BY p.time_stamp DESC;",
+  },
+  reactions: {
+    add: "INSERT INTO reactions (post_ID, username) VALUES (?, ?)",
+    remove: "DELETE FROM reactions WHERE post_ID = ? AND username = ?",
+    get_all_reactions: "SELECT username FROM reactions WHERE post_ID = ?"
   }
 };
 
@@ -618,6 +629,39 @@ app.post("/searchUsers",(request, response) => {
         }
     })
 }) 
+
+// CREATE POST: 
+app.post("/createPost", (request, response) => {
+    let {username, song_title, post_body} = request.body;
+    if(checkRegex([username, song_title])) {
+        return response.status(403).send("Invalid characters in username/song title: Access denied.")
+    }
+    let time_stamp = new Date().toISOString();
+    let post_ID = crypto.randomUUID();
+    Connection.query(SQL_REQUESTS.post.add, [post_ID, username, song_title, post_body, time_stamp], (SQLerror, SQLresults) => {
+        if(SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        } else {
+            return response.status(200).send("Post success!")
+        }
+    })
+})
+
+app.post("/getFollowingPost", (request, response) => {
+    let {username} = request.body;
+    if(checkRegex([username])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.post.get_following, [username], (SQLerror, SQLresults) => {
+        if(SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        } else if(SQLresults.length === 0) {
+            return response.status(404).send(`No posts found for user ${username}'s following.`)
+        } else {
+            return response.status(200).json(SQLresults)
+        }
+    })   
+})
 
 //  HELPER FUNCTIONS
 // REGEX CHECK: takes an array, returns a boolean

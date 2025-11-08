@@ -44,4 +44,24 @@ CREATE TABLE liked_songs (
     song VARCHAR (255) NOT NULL,
     PRIMARY KEY (username),
     FOREIGN KEY (username) REFERENCES users(username)
+);
+
+-- POSTS TABLE
+CREATE TABLE posts (
+    post_ID CHAR(36) NOT NULL,
+    username VARCHAR(50) NOT NULL,
+    song VARCHAR(256) NOT NULL,
+    body TEXT NOT NULL,
+    time_stamp VARCHAR(256) NOT NULL,
+    PRIMARY KEY (post_ID),
+    FOREIGN KEY (username) REFERENCES users(username)
+)
+
+-- REACTIONS TABLE
+CREATE TABLE reactions (
+    post_ID CHAr(36) NOT NULL,
+    username VARCHAR(50) NOT NULL,
+    PRIMARY KEY (post_ID, username),
+    FOREIGN KEY (username) REFERENCES users(username),
+    FOREIGN KEY (post_ID) REFERENCES posts(post_id)
 )
