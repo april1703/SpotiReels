@@ -59,7 +59,7 @@ CREATE TABLE posts (
 
 -- REACTIONS TABLE
 CREATE TABLE reactions (
-    post_ID CHAr(36) NOT NULL,
+    post_ID CHAR(36) NOT NULL,
     username VARCHAR(50) NOT NULL,
     PRIMARY KEY (post_ID, username),
     FOREIGN KEY (username) REFERENCES users(username),

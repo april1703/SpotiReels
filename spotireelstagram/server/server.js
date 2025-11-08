@@ -443,7 +443,7 @@ app.post("/changeExplicit", (request, response) => {
 app.post("/addFollowing", (request, response) => {
     let {username, following_username} = request.body;
     if(checkRegex([username, following_username])) {
-        return response.status(403).message("Invalid characters in request body: Access denied.");
+        return response.status(403).send("Invalid characters in request body: Access denied.");
     }
     Connection.query(SQL_REQUESTS.following.add, [username, following_username], (SQLerror, SQLresults) => {
         if (SQLerror.errno === 1062) {

@@ -2,6 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import AddToPlaylistMenu from "./AddToPlaylistPopup";
 import "./Search.css";
 
+// Retrieve cookie - send username to backend
+function getCookie(name) {
+  let value = `; ${document.cookie}`;
+  let parts = value.split(`; ${name}=`);
+  if (parts.length === 2)
+    return parts.pop().split(';').shift();
+}
+
 function readStoredToken() {
   return window.localStorage.getItem('accessToken') || ''
 }
@@ -80,16 +88,26 @@ function LikeButton({ checked, onChange, size = 26, color = "rgb(189, 91, 255)" 
   );
 }
 
+function getCurrentUser() {
+  const token = getCookie("token");
+  if (!token) return null;
+
+  const payload = JSON.parse(atob(token.split(".")[1]));
+  return payload.username;
+}
+
 export default function Search({ accessToken: propAccessToken, setTrackUri }) {
   const [accessToken, setAccessToken] = useState(() => propAccessToken || readStoredToken());
 
   const [q, setQ] = useState("");
-  const [type, setType] = useState("track,artist,album");
+  const [type, setType] = useState("track,artist,album,users");
   const [market, setMarket] = useState("US");
   const [status, setStatus] = useState("");
   const [items, setItems] = useState([]);
   const [liked, setLiked] = useState(() => new Set());
+  const [followed, setFollowed] = useState(() => new Set());
   const timer = useRef(null);
+  const currentUser = getCurrentUser();
 
   // NEW: picker state
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -122,11 +140,47 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
     setStatus(query ? "Searching..." : "");
     setItems([]);
     if (!query) return;
+    
+    // fetch function for searching friends/other users
+    if (type === "users") {
+      const res = await fetch("http://localhost:3001/searchUsers", {
+        method: "POST",
+        headers: {"Content-type" : "application/json"},
+        body: JSON.stringify({ query })
+      })
+      if (res.status === 404) {
+        setItems([]);
+        setStatus(`No users found for ${query}`);
+        return;
+      }
+      if (!res.ok)  {
+        const msg = await res.text();
+        setStatus(`Error ${msg}`);
+        return;
+      }
 
+      const data = await res.json();
+
+      // database users into same card style as api call
+      const userList = data.map(user => ({
+        key: `user: ${user.username}`,
+        pill: "User",
+        title: user.username,
+        subtitle: user.display_name || "(No display name)",
+
+      }));
+
+      setItems(userList);
+      setStatus("");
+      return;
+    }
+
+    
     if (!accessToken) {
       setStatus("Please log in first.");
       return;
     }
+
 
     try {
       const url = new URL("https://api.spotify.com/v1/search");
@@ -138,7 +192,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
       let r = await fetch(url.toString(), {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-
+      
       if (r.status === 401) {
         const updated = readStoredToken();
         if (updated && updated !== accessToken) {
@@ -146,17 +200,17 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
           r = await fetch(url.toString(), { headers: { Authorization: `Bearer ${updated}` } });
         }
       }
-
+      
       if (r.status === 429) {
         const retry = r.headers.get("Retry-After") || "1";
         setStatus(`Rate limited. Try again in ${retry} seconds.`);
         return;
       }
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-
+      
       const data = await r.json();
       const list = [];
-
+      
       for (const t of (data.tracks?.items ?? [])) {
         const img = t.album?.images?.[2]?.url || t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || "";
         const artists = (t.artists ?? []).map(a => a.name).join(", ");
@@ -179,7 +233,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
           href: `https://open.spotify.com/artist/${a.id}`
         });
       }
-
+      
       for (const al of (data.albums?.items ?? [])) {
         const img = al.images?.[2]?.url || al.images?.[1]?.url || al.images?.[0]?.url || "";
         const artists = (al.artists ?? []).map(x => x.name).join(", ");
@@ -191,7 +245,8 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
           href: `https://open.spotify.com/album/${al.id}`
         });
       }
-
+      
+      
       setItems(list);
       setStatus("");
     } catch (e) {
@@ -208,10 +263,27 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
       return next;
     });
   };
-
+  
   function openAdd(trackUri) {
     setPickerTrackUri(trackUri);
     setPickerOpen(true);
+  }
+  async function followServer(followingUsername) {
+    await fetch("http://localhost:3001/addFollowing", {
+      method: "POST",
+      credentials: "include",
+      headers: {"Content-type" : "application/json"},
+      body: JSON.stringify({username: currentUser, followingUsername})
+    })
+  }
+
+  async function unfollowServer(followingUsername) {
+    await fetch("http://localhost:3001/removeFollowing", {
+      method: "POST",
+      credentials: "include",
+      headers: {"Content-type" : "application/json"},
+      body: JSON.stringify({username: currentUser, followingUsername})
+    })
   }
 
   return (
@@ -272,7 +344,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
       >
         {items.length === 0 && status === "" && q && <div style={{ color: "#bbb"}}>No results.</div>}
 
-        {items.map(({ key, pill, img, title, subtitle, href, uri }) => (
+        {items.map(({ key, pill, img, title, subtitle, uri }) => (
           <div
             key={key}
             onClick={() => { if (uri && setTrackUri) setTrackUri(uri); }}
@@ -337,6 +409,45 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
                   + Add
                 </button>
               )}
+
+              {pill === "User" && (
+                <button 
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const username = key.split(":")[1];
+
+                  setFollowed(prev => {
+                    const toggle = new Set(prev);
+                    toggle.has(key) ? toggle.delete(key) : toggle.add(key);
+                    return toggle; 
+                  });
+                  try {
+                    if (followed.has(key)) {
+                      await unfollowServer(username);
+                    } 
+                    else {await followServer(username);}
+                  } catch (err) {
+                    console.error("follow toggle failed", err);
+                    setFollowed(prev => {
+                      const toggle = new Set(prev);
+                      toggle.has(key) ? toggle.delete(key) : toggle.add(key);
+                      return toggle;
+                    });
+                  }
+                }}
+                style={{
+                  background: "transparent",
+                  border: "1px solid #444",
+                  borderRadius: 8,
+                  padding: "4px 8px",
+                  color: followed.has(key) ? "#ff4d4d" : "#8e2dd2ff",
+                  cursor: "pointer",
+                  fontSize: 12
+                }}
+                >
+                  {followed.has(key) ? "Unfollow" : "+ Follow"}
+                </button>
+              )}
             </div>
 
             <img
@@ -345,6 +456,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
               onError={(e) => { e.currentTarget.style.display = "none"; }}
               style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", background: "#222" }}
             />
+
             <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start", }}>
               <span style={{ color: "#8e2dd2ff", display: "inline-block", padding: "2px 8px", fontSize: 12, borderRadius: 999, border: "1px solid #444" }}>{pill}</span>
               <div style={{ color: "#8e2dd2ff", fontWeight: 600, lineHeight: 1.2 }} dangerouslySetInnerHTML={{__html: escapeHtml(title) }} />
