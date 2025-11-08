@@ -29,6 +29,7 @@ const SQL_REQUESTS = {
     changePassword: "UPDATE users SET password = ?, salt = ? WHERE username = ?",
     changeIsDarkMode: "UPDATE users SET isDarkMode = ? WHERE username = ?",
     changeExplicit: "UPDATE users SET isExplicit = ? WHERE username = ?",
+    search: "SELECT username FROM users WHERE username LIKE ?"
   },
 
   following: {
@@ -600,6 +601,23 @@ app.post("/getLiked", (request, response) => {
         }
     })
 })
+
+// SEARCH USERS: takes a string, returns network status, a message, and, on 200, a JSON body
+app.post("/searchUsers",(request, response) => {
+    let {query} = request.body;
+    if(checkRegex([query])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.user.search, ["%"+query+"%"], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        } else if (SQLresults.length === 0) {
+            return response.status(404).send(`No results found for string \'${query}\'`)
+        } else {
+            return response.status(200).json(SQLresults)
+        }
+    })
+}) 
 
 //  HELPER FUNCTIONS
 // REGEX CHECK: takes an array, returns a boolean
