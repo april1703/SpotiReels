@@ -20,14 +20,6 @@ async function getSpotifyId() {
   }
 }
 
-// Retrieve cookie - send username to backend
-function getCookie(name) {
-  let value = `; ${document.cookie}`;
-  let parts = value.split(`; ${name}=`);
-  if (parts.length === 2)
-    return parts.pop().split(';').shift();
-}
-
 const SPOTIFY_ID = await getSpotifyId();
 const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_ID}&response_type=code&redirect_uri=http://127.0.0.1:3000/auth/callback&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state%20playlist-modify-public%20playlist-modify-private&show_dialog=true`;
 

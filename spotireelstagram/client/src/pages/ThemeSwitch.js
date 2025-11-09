@@ -14,43 +14,33 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
         localStorage.setItem("theme", theme);
-    }, [theme]);
-    const value = useMemo(
-            () => ({
-                theme,
-                toggleTheme: () => setTheme((t) => (t === "dark" ? "light" : "dark")),
-                setTheme
-            }),
-            [theme]
-        );
+  }, [theme]);
+
+  const value = useMemo(
+    () => ({
+      theme,
+      toggleTheme: () => setTheme((t) => (t === "dark" ? "light" : "dark")),
+      setTheme
+    }),
+    [theme]
+  );
     
-        return (<ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>);
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function ThemeSwitch() {
   const {theme, setTheme} = useContext(ThemeContext);
-  const isDark = theme === "dark";
+  const isLight = theme === "light";
   
   return (
-    <label className="theme">
+    <label className="ab-switch" aria-label="Toggle light mode">
       <input
         type="checkbox"
-        className="theme__toggle"
-        checked={isDark}
-        onChange={(e) => setTheme(e.target.checked ? "dark" :"light" )}
+        checked={isLight}
+        onChange={(e) => setTheme(e.target.checked ? "light" :"dark")}
+        aria-checked={isLight}
       />
-      <span className="theme__icon">
-        {/* sun/moon parts */}
-        <span className="theme__icon-part" />
-        <span className="theme__icon-part" />
-        <span className="theme__icon-part" />
-        <span className="theme__icon-part" />
-        <span className="theme__icon-part" />
-        <span className="theme__icon-part" />
-        <span className="theme__icon-part" />
-        <span className="theme__icon-part" />
-        <span className="theme__icon-part" />
-      </span>
+      <span className="ab-slider" />
     </label>
   );
 }

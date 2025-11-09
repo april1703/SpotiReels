@@ -18,6 +18,10 @@ const SPOTIFY_CLIENT_ID = String(process.env.SPOTIFY_CLIENT_ID);
 const SPOTIFY_SECRET = String(process.env.SPOTIFY_SECRET);
 
 const app = express();
+//app.use(cors({
+//    origin: "http://127.0.0.1:3000",
+//    credentials: true
+//}));
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -390,6 +394,16 @@ app.post("/login", (request, response) => {
             return response.status(500).send(`Encryption error: ${bCryptError.message}`);
         });
     });
+});
+
+// LOGOUT FUNCTION: clears cookie
+app.post("/logout", (request, response) => {
+    response.clearCookie("session_token", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false
+    });
+    response.status(200).send("Logged out");
 });
 
 // CHANGE PASSWORD FUNCTION: takes 3 strings, returns network status and message

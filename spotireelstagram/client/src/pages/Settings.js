@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
 import {ThemeContext, ThemeSwitch} from "./ThemeSwitch";
 import "./theme.css"
@@ -22,14 +22,16 @@ function readSettings() {
 function writeSettings(data) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
-export function logout() {
+export async function logout() {
     try {
-        window.localStorage.removeItem('accessToken');
-        window.localStorage.removeItem('refreshToken');
-        window.localStorage.removeItem('dev_spotify_token');
-        window.localStorage.removeItem('sr_accessToken');
-    } catch (e) {}
+        await fetch("http://localhost:3001/logout", {
+            method: "POST",
+            credentials: "include",
+        });
+    } catch (e) {console.error("Logout request failed", e)};
+
     // navigate to login/root and force reload to reset app state
+    localStorage.clear();
     window.history.pushState({}, '', '/');
     window.location.reload();
 };
