@@ -1,29 +1,27 @@
 services:
 # the sql containers
- database:
-  image: mysql
-  environment: 
-  - MYSQL_ROOT_PASSWORD=lakwdmoanwdoianksndakna
-  - MYSQL_ROOT_HOST=%
-  - MYSQL_USER=service-server
-  - MYSQL_PASSWORD=test-password
-  ports: 
-  - "3307:3306"
-  volumes:
-  # - mysql-data:/var/lib/mysql - uncomment if you want to save your sql data between sessions
-  - ./sql:/docker-entrypoint-initdb.d/
-  #healthcheck:
-    #  test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$MYSQL_ROOT_PASSWORD"]
-     # interval: 10s
-     # timeout: 5s
-     # retries: 5
+#  database:
+#   image: mysql
+#   environment: 
+#   - MYSQL_ROOT_PASSWORD=lakwdmoanwdoianksndakna
+#   - MYSQL_ROOT_HOST=%
+#   - MYSQL_USER=service-server
+#   - MYSQL_PASSWORD=test-password
+#   ports: 
+#   - "3307:3306"
+#   volumes:
+#   # - mysql-data:/var/lib/mysql - uncomment if you want to save your sql data between sessions
+#   - ./sql:/docker-entrypoint-initdb.d/
+#   #healthcheck:
+#     #  test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$MYSQL_ROOT_PASSWORD"]
+#      # interval: 10s
+#      # timeout: 5s
+#      # retries: 5
 
 
  server:
   build: ./spotireelstagram/server
   env_file: ./spotireelstagram/server/.env
-  depends_on:
-  - database
   ports:
   - "3001:3001"
   environment:
@@ -37,7 +35,6 @@ services:
  client:
   build: ./spotireelstagram/client
   depends_on:
-  - database
   - server
   ports:
   - "3000:3000"

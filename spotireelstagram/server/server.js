@@ -10,6 +10,7 @@ require("dotenv").config();
 
 const JWT_SECRET = String(process.env.JWT_SECRET);
 const PEPPER = String(process.env.PEPPER);
+const SQL_DATABASE = String(process.env.MYSQL_DATABASE);
 const SQL_HOST = String(process.env.MYSQL_HOST);
 const SQL_USER = String(process.env.MYSQL_USER);
 const SQL_PASSWORD = String(process.env.MYSQL_PASSWORD);
@@ -67,13 +68,27 @@ const Connection = mysql.createConnection({
     host: SQL_HOST,
     user: SQL_USER,
     password: SQL_PASSWORD,
-    database: "spottireels",
-});
-Connection.ping(err => {
-  if (err) console.error("Ping failed:", err);
-  else console.log("DB connection OK");
+    database: SQL_DATABASE,
 });
 
+// Try to connect and ping
+Connection.connect(err => {
+  if (err) {
+    console.error("❌ Connection failed:");
+    console.error("Error code:", err.code);
+    console.error("Message:", err.message);
+    process.exit(1);
+  } else {
+    console.log("✅ Connected to MySQL!");
+    Connection.ping(pingErr => {
+      if (pingErr) {
+        console.error("❌ Ping failed:", pingErr.message);
+      } else {
+        console.log("✅ Ping OK — database is reachable.");
+      }
+    });
+  }
+});
 // SPOTIFY API CONNECTION
 app.post('/auth/refresh', (req, res) => {
     const refreshToken = req.body.refreshToken
@@ -354,10 +369,12 @@ app.post("/login", (request, response) => {
     }
     Connection.query(SQL_REQUESTS.user.checkPassword, [username], (SQLerror, SQLresults) => {
         if (SQLerror) {
+            console.error(SQLerror.message)
             return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
 
         if (SQLresults.length === 0) {
+            console.error("User not found.");
             return response.status(404).send("User not found");
         }
         bcrypt.compare( SQLresults[0].salt + password + PEPPER, SQLresults[0].password)

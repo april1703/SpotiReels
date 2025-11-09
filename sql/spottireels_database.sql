@@ -55,7 +55,7 @@ CREATE TABLE posts (
     time_stamp VARCHAR(256) NOT NULL,
     PRIMARY KEY (post_ID),
     FOREIGN KEY (username) REFERENCES users(username)
-)
+);
 
 -- REACTIONS TABLE
 CREATE TABLE reactions (
