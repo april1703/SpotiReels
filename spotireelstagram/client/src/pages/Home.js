@@ -12,12 +12,19 @@ function getCookie(name) {
     return parts.pop().split(';').shift();
 }
 
+function getCurrentUser() {
+  const token = getCookie("token");
+  if (!token) return null;
+  const payload = JSON.parse(atob(token.split(".")[1]));
+  return payload.username;
+}
+
 export default function Home({ accessToken, setTrackUri }) { // <— add setTrackUri so the popup can play
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [openId, setOpenId] = useState(null); // <— selected playlist id to open popup
-  const token = getCookie('token');
+  const currentUser = getCurrentUser();
 
   const headers = useMemo(() => (
     accessToken ? { Authorization: `Bearer ${accessToken}` } : null
@@ -47,8 +54,8 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
         }
         if (!cancelled) {
           setPlaylists(all);
-          document.cookie = `token=${token}; Path=/; SameSite=None; Strict`;
-          console.log(`token=${token}`);
+          //document.cookie = `token=${token}; Path=/; SameSite=None; Strict`;
+          //console.log(`token=${token}`);
         }
 
       } catch (e) {
@@ -69,7 +76,9 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
       <div className="navbar">
       </div>
       <div className='navbar-space'/>
-      
+      <h1>
+        Welcome {currentUser}!
+      </h1>
       {loading ? (
         <p className='loading-text'>Loading playlists...</p>) :(
         <div className="playlist-grid">

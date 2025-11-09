@@ -467,21 +467,24 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
                   onClick={async (e) => {
                     e.stopPropagation();
                     const username = key.split(":")[1];
+                    
+                    // check to see if already following
+                    const isCurrentlyFollowing = followed.has(key)
 
                     setFollowed((prev) => {
                       const toggle = new Set(prev);
-                      toggle.has(key) ? toggle.delete(key) : toggle.add(key);
+                      isCurrentlyFollowing ? toggle.delete(key) : toggle.add(key);
                       return toggle;
                     });
 
                     try {
-                      if (followed.has(key)) await unfollowServer(username);
-                      else await followServer(username);
+                      if (isCurrentlyFollowing) {await unfollowServer(username);}
+                      else {await followServer(username);}
                     } catch (err) {
                       console.error("follow toggle failed", err);
                       setFollowed((prev) => {
                         const toggle = new Set(prev);
-                        toggle.has(key) ? toggle.delete(key) : toggle.add(key);
+                        isCurrentlyFollowing ? toggle.delete(key) : toggle.add(key);
                         return toggle;
                       });
                     }
