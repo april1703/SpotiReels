@@ -477,13 +477,15 @@ app.post("/addFollowing", (request, response) => {
         return response.status(403).send("Invalid characters in request body: Access denied.");
     }
     Connection.query(SQL_REQUESTS.following.add, [username, following_username], (SQLerror, SQLresults) => {
-        if (SQLerror.errno === 1062) {
-            return response.status(409).send(`User ${username} is already following ${following_username}.`);
-        } else if (SQLerror) {
-            return response.status(500).send(`Database error: ${SQLerror.message}`);
-        } else {
-            return response.status(200).send(`Successfully followed user ${following_username}`);
+        if (SQLerror) {
+            if (SQLerror.errno === 1062) {
+                return response.status(409).send(`User ${username} is already following ${following_username}.`);
+
         }
+        console.error("Database Error: ", SQLerror);
+        return response.status(500).send(`Database error: ${SQLerror.message}`);
+        }
+            return response.status(200).send(`Successfully followed user ${following_username}`);
     })
     
 })

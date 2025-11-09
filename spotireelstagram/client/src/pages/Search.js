@@ -296,7 +296,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
   async function followServer(followingUsername) {
     await fetch("http://localhost:3001/addFollowing", {
       method: "POST",
-      credentials: "include",
+      credentials: "omit",
       headers: { "Content-type": "application/json" },
       // server expects `following_username`
       body: JSON.stringify({ username: currentUser, following_username: followingUsername }),
@@ -305,7 +305,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
   async function unfollowServer(followingUsername) {
     await fetch("http://localhost:3001/removeFollowing", {
       method: "POST",
-      credentials: "include",
+      credentials: "omit",
       headers: { "Content-type": "application/json" },
       body: JSON.stringify({ username: currentUser, following_username: followingUsername }),
     });
