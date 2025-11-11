@@ -34,7 +34,8 @@ const SQL_REQUESTS = {
     changePassword: "UPDATE users SET password = ?, salt = ? WHERE username = ?",
     changeIsDarkMode: "UPDATE users SET isDarkMode = ? WHERE username = ?",
     changeExplicit: "UPDATE users SET isExplicit = ? WHERE username = ?",
-    search: "SELECT username FROM users WHERE username LIKE ?"
+    search: "SELECT username FROM users WHERE username LIKE ?",
+    getSimilar: "SELECT u.username FROM users u WHERE LOWER(u.username) <> ? AND NOT EXISTS ( 1 FROM following f WHERE LOWER(f.username) = ? AND LOWER(f.user_following) = LOWER(u.username)) ORDER BY RAND() LIMIT ?"
   },
 
   following: {
@@ -78,21 +79,22 @@ const Connection = mysql.createConnection({
 // Try to connect and ping
 Connection.connect(err => {
   if (err) {
-    console.error("❌ Connection failed:");
+    console.error("Connection failed:");
     console.error("Error code:", err.code);
     console.error("Message:", err.message);
     process.exit(1);
   } else {
-    console.log("✅ Connected to MySQL!");
+    console.log("Connected to MySQL!");
     Connection.ping(pingErr => {
       if (pingErr) {
-        console.error("❌ Ping failed:", pingErr.message);
+        console.error("Ping failed:", pingErr.message);
       } else {
-        console.log("✅ Ping OK — database is reachable.");
+        console.log("Ping OK — database is reachable.");
       }
     });
   }
 });
+
 // SPOTIFY API CONNECTION
 app.post('/auth/refresh', (req, res) => {
     const refreshToken = req.body.refreshToken
@@ -322,7 +324,7 @@ app.listen(3001, () => {
 })
 
 // RETURN ID FUNCTION: takes nothing, returns network status and a string
-app.get('/spotify-id', (request, response) => {
+app.get('/spotify-id', (_, response) => {
     console.log(`User requested Spotify ID: ${SPOTIFY_CLIENT_ID}`);
     return response.status(200).json(SPOTIFY_CLIENT_ID);
     
@@ -330,7 +332,6 @@ app.get('/spotify-id', (request, response) => {
 
 // REGISTRATION FUNCTION: takes 4 strings, returns network status and message
 app.post("/register", (request, response) => {
-    // Register page passes username, password, checkPassword
     const {username, password} = request.body;
     if (checkRegex([username, password])) {
         return response.status(400).send("Invalid characters used.");
@@ -480,14 +481,11 @@ app.post("/addFollowing", (request, response) => {
         if (SQLerror) {
             if (SQLerror.errno === 1062) {
                 return response.status(409).send(`User ${username} is already following ${following_username}.`);
-
         }
-        console.error("Database Error: ", SQLerror);
         return response.status(500).send(`Database error: ${SQLerror.message}`);
         }
             return response.status(200).send(`Successfully followed user ${following_username}`);
     })
-    
 })
 
 //REMOVE FOLLOWING: takes two strings, returns network status and message
@@ -522,34 +520,26 @@ app.post("/getFollowing", (request, response) => {
     })
 })
 
-app.get("/recommend/users", (req, res) => {
-    const me = String(req.query.username || "").trim();
-    const meLC = me.toLowerCase();
-    const limit = Math.max(1, Math.min(24, Number(req.query.limit) || 12));
-    if (!me) return res.status(400).send("Missing username");
-
-    const sql = `
-        SELECT u.username
-        FROM users u
-        WHERE LOWER(u.username) <> ?
-            AND NOT EXISTS (
-                SELECT 1 FROM following f
-                WHERE LOWER(f.username) = ?
-                    AND LOWER(f.user_following) = LOWER(u.username)
-            )
-        ORDER BY RAND()
-        LIMIT ?;
-    
-    `;
-    Connection.query(sql, [meLC, meLC, limit], (err, rows) => {
-        if (err) return res.status(500).send(`Database error: ${err.message}`);
-        res.json((rows || []).map(r => ({ username: r.username })));
+app.get("/recommendUsers", (request, response) => {
+    let {user, limit} = request.body
+    // let limit = Math.max(1, Math.min(24, Number(req.query.limit) || 12));
+    if (!user) return response.status(400).send("Missing username");
+    if (checkRegex([user])){
+        return response.status(403).send("Invalid Characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.user.getSimilar, [user, user, limit], (SQLerror, SQLresults) => {
+        if (SQLerror) {
+            return response.status(500).send(`Database error: ${err.message}`);
+        } 
+        else {
+        response.status(200).json((rows || []).map(r => ({ username: r.username })));
+        }
     });
 });
 
 // ADD TO PLAYLIST: takes three strings, returns network status and message
 app.post("/addToPlaylist", (request, response) => {
-    let{username, list_name, song} = request.body;
+    let {username, list_name, song} = request.body
     if(checkRegex([username, list_name, song])) {
         return response.status(403).send("Invalid characters in request body: Access denied.")
     }

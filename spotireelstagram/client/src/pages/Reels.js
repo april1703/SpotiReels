@@ -95,7 +95,7 @@ async function fetchRecommendedUsers({ username, followingSet = new Set(), limit
     };
 
     try {
-        const r = await fetch(`http://localhost:3001/recommend/users?username=${encodeURIComponent(username)}&limit=${limit}`);
+        const r = await fetch(`http://localhost:3001/recommendUsers?username=${encodeURIComponent(username)}&limit=${limit}`);
         if (!r.ok) return fromPool();
         const rows = await r.json();
         const filtered = rows
