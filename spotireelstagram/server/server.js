@@ -522,6 +522,31 @@ app.post("/getFollowing", (request, response) => {
     })
 })
 
+app.get("/recommend/users", (req, res) => {
+    const me = String(req.query.username || "").trim();
+    const meLC = me.toLowerCase();
+    const limit = Math.max(1, Math.min(24, Number(req.query.limit) || 12));
+    if (!me) return res.status(400).send("Missing username");
+
+    const sql = `
+        SELECT u.username
+        FROM users u
+        WHERE LOWER(u.username) <> ?
+            AND NOT EXISTS (
+                SELECT 1 FROM following f
+                WHERE LOWER(f.username) = ?
+                    AND LOWER(f.user_following) = LOWER(u.username)
+            )
+        ORDER BY RAND()
+        LIMIT ?;
+    
+    `;
+    Connection.query(sql, [meLC, meLC, limit], (err, rows) => {
+        if (err) return res.status(500).send(`Database error: ${err.message}`);
+        res.json((rows || []).map(r => ({ username: r.username })));
+    });
+});
+
 // ADD TO PLAYLIST: takes three strings, returns network status and message
 app.post("/addToPlaylist", (request, response) => {
     let{username, list_name, song} = request.body;
