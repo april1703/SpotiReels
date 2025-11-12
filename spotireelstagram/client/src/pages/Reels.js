@@ -243,7 +243,29 @@ export default function Reels({ accessToken, setTrackUri }) {
     };
   }).sort((a, b) => b.ts - a.ts);
 
-  setAllPosts(mapped);
+    // fetch comments per post
+  const withComments = await Promise.all(
+    mapped.map(async (p) => {
+      try {
+        const r = await fetch("http://localhost:3001/getComment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ post_ID: p.id }),
+        });
+        const rows = r.ok ? await r.json() : [];
+        const comments = rows.map((row) => ({
+          user: row.username,
+          text: row.body,
+          ts: Date.parse(row.time_stamp) || Date.now(),
+        }));
+        return { ...p, comments };
+      } catch {
+        return p; // keep the post even if comments fail
+      }
+    })
+  );
+
+  setAllPosts(withComments);
 }, [headers]);
 
 useEffect(() => { loadFeed(); }, [loadFeed]);
@@ -307,12 +329,30 @@ useEffect(() => { loadFeed(); }, [loadFeed]);
   resetComposer();
 };
 
-  const addComment = (id, text) => {
-    setAllPosts((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, comments: [...p.comments, { user, text, ts: Date.now() }] } : p
-      )
-    );
+  const addComment = async (postId, text) => {
+    const username = getCurrentUser();
+    if (!username) return alert("Please log in again.");
+    try {
+      const r = await fetch("http://localhost:3001/createComment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, post_ID: postId, body: text }),
+      });
+      if (!r.ok) {
+        const t = await r.text().catch(() => "");
+        return alert(`Failed to comment: ${r.status} ${t}`);
+      }
+      // optimistic UI + stable
+      setAllPosts(prev =>
+        prev.map(p =>
+          p.id === postId
+            ? { ...p, comments: [...p.comments, { user: username, text, ts: Date.now() }] }
+            : p
+        )
+      );
+    } catch (e) {
+      alert("Network error while commenting.");
+    }
   };
 
   const openAddToPlaylist = (uri) => {
