@@ -3,46 +3,40 @@ import SpotifyPlayer from 'react-spotify-web-playback'
 import { useMemo, useState, useEffect } from 'react';
 import AddToPlaylistPopup from "./AddToPlaylistPopup";
 
-//PLAYERBAR EXPLANATION
-//Playerbar at bottom
-//does not render if there's no access token
-//plays tracks by passing the player a trackURI
-//player plays music by giving the trackURI to Spotify's Web Playback SDK (API stuff)
-//now plays songs as soon as its clicked via search or wherever.
-
-function Player({ accessToken, trackUri }) {
-    const [pickerOpen, setPickerOpen] = useState(false);
-  // track the currently playing track's URI from the Spotify player state
+// Player bar at bottom — now supports a queue (playlist continuation)
+function Player({ accessToken, trackUri, trackQueue = [] }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [currentTrackUri, setCurrentTrackUri] = useState(trackUri || "");
-  // control 'play' so selecting a new track starts play IMMEDIATELY regardles of player state
   const [play, setPlay] = useState(false);
 
   useMemo(() => !!trackUri, [trackUri]);
 
-  // when a new track is selected, ensure playback starts
+  // when a new track (or new queue) is provided, start playing immediately
   useEffect(() => {
-    if (trackUri) setPlay(true);
-  }, [trackUri]);
+    if (trackUri || (trackQueue && trackQueue.length)) {
+      setPlay(true);
+    }
+  }, [trackUri, trackQueue]);
 
   if (!accessToken) return null;
 
+  const urisToPlay = trackQueue && trackQueue.length
+    ? trackQueue
+    : (trackUri ? [trackUri] : []);
+
   return (
     <div style={{ width: '100%', padding: 0, margin: 0, background: '#000000ff', position: 'relative' }}>
-      {/* the actual spotify player */}
       <SpotifyPlayer
         token={accessToken}
         showSaveIcon
         play={play}
-        uris={trackUri ? [trackUri] : []}
-        // callback keeps `play` state in sync with the actual player
+        uris={urisToPlay}
         callback={(state) => {
-          // state.isPlaying indicates whether Spotify is playing
           if (typeof state.isPlaying === 'boolean') setPlay(state.isPlaying);
-          // state.track may contain the currently playing track info (including uri)
           try {
             if (state && state.track && state.track.uri) setCurrentTrackUri(state.track.uri);
           } catch (e) {
-            
+            // ignore
           }
         }}
         styles={{
@@ -55,7 +49,7 @@ function Player({ accessToken, trackUri }) {
           trackNameColor: '#ffffff'
         }}
       />
-      {/* Add to playlist button placed over the player bar */}
+
       {currentTrackUri && (
         <div style={{ position: 'fixed', right: 16, bottom: 92, zIndex: 1300 }}>
           <button
@@ -80,7 +74,6 @@ function Player({ accessToken, trackUri }) {
 
       <AddToPlaylistPopup
         accessToken={accessToken}
-        // use the currently playing track when opening from this button
         trackUri={currentTrackUri}
         isOpen={pickerOpen}
         onClose={() => setPickerOpen(false)}
