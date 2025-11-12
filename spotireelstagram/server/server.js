@@ -383,12 +383,18 @@ app.post("/login", (request, response) => {
         }
         bcrypt.compare( SQLresults[0].salt + password + PEPPER, SQLresults[0].password)
         .then(isMatch => {
-            if (isMatch) {
-                const token = jwt.sign({username}, JWT_SECRET, {expiresIn: "2h"});
-                return response.status(200).json({token});
-            } else {
+            if (!isMatch) 
                 return response.status(403).send("Incorrect password.");
-            }
+                
+                const token = jwt.sign({username}, JWT_SECRET, {expiresIn: "2h"});
+                
+                response.cookie("session_token", token, {
+                    httpOnly: true,
+                    sameSite: "lax",
+                    secure: false,
+                    maxAge: 2 * 60 * 60 * 1000
+                });
+                return response.status(200).json({message: "Logged in", token });  
         })
         .catch(bCryptError => {
             return response.status(500).send(`Encryption error: ${bCryptError.message}`);
@@ -397,12 +403,8 @@ app.post("/login", (request, response) => {
 });
 
 // LOGOUT FUNCTION: clears cookie
-app.post("/logout", (request, response) => {
-    response.clearCookie("session_token", {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: false
-    });
+app.post("/logout", (response) => {
+    response.clearCookie("session_token")
     response.status(200).send("Logged out");
 });
 

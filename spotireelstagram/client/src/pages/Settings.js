@@ -2,6 +2,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
 import {ThemeContext, ThemeSwitch} from "./ThemeSwitch";
 import "./theme.css"
+import FollowingPopup from "./followingPopup";
 
 const STORAGE_KEY = "app_settings_v1";
 const defaultSettings = {
@@ -41,6 +42,7 @@ export default function Settings() {
     const initial = useMemo(readSettings, []);
     const [settings, setSettings] = useState(initial);
     const [saved, setSaved] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
     
     // change password settings
     const [formData, setFormData] = useState({
@@ -170,12 +172,14 @@ export default function Settings() {
                 </Col>
                 
                 {/* Following Section */}
+                <FollowingPopup isOpen={showPopup} onClose={() => setShowPopup(false)}></FollowingPopup>
                     <Col md={6} className="p-3 mb-4 rounded" style={{ border: "1px solid var(--border)" }}>
                     <h4 className="mb-3" style={{color: "#8e2dd2ff"}}>Following</h4>
-                    <button className="btn btn-primary" style={{backgroundColor: "#8e2dd2ff", border: "none", borderRadius: "5px"}}>
+                    <button onClick={() => setShowPopup(true)} className="btn btn-primary" style={{backgroundColor: "#8e2dd2ff", border: "none", borderRadius: "5px"}}>
                         Manage Following
                     </button>
                     </Col>
+
                 </Row>
           
             <h4 className="mb-4" style={{color: "#8e2dd2ff"}}>Change Password</h4>
