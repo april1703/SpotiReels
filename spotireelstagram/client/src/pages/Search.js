@@ -18,6 +18,13 @@ function getCookie(name) {
   if (parts.length === 2) return parts.pop().split(";").shift();
 }
 
+function getCurrentUser() {
+  const token = getCookie("token");
+  if (!token) return null;
+  const payload = JSON.parse(atob(token.split(".")[1]));
+  return payload.username;
+}
+
 function readStoredToken() {
   return window.localStorage.getItem("accessToken") || "";
 }
@@ -100,16 +107,9 @@ function LikeButton({ checked, onChange, size = 26, color = "rgb(189, 91, 255)" 
   );
 }
 
-function getCurrentUser() {
-  const token = getCookie("token");
-  if (!token) return null;
-  const payload = JSON.parse(atob(token.split(".")[1]));
-  return payload.username;
-}
-
 export default function Search({ accessToken: propAccessToken, setTrackUri }) {
   const [accessToken, setAccessToken] = useState(() => propAccessToken || readStoredToken());
-
+  const [users, setUsers] = useState([]); // all users in the system
   const [q, setQ] = useState("");
   // Keep users in the default so “All + Friends” works on first load
   const [type, setType] = useState("track,artist,album,users");
@@ -117,13 +117,37 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
   const [status, setStatus] = useState("");
   const [items, setItems] = useState([]);
   const [liked, setLiked] = useState(() => new Set());
-  const [followed, setFollowed] = useState(() => new Set());
+  const [followed, setFollowed] = useState(new Set()); // who you follow
   const timer = useRef(null);
-  const currentUser = getCurrentUser();
+  const currentUser = useMemo(getCurrentUser, []);
 
   // Add-to-playlist picker
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTrackUri, setPickerTrackUri] = useState("");
+
+  useEffect(() => {
+    if(!currentUser) return;
+
+    fetch("http://localhost:3001/getFollowing", {
+      method: "POST",
+      headers: {"Content-type": "application/json"},
+      body: JSON.stringify({username: currentUser}),
+    })
+
+    .then(async (res) => {
+      if (!res.ok) {
+        const text = await res.text();
+        console.warn("No following found:", text);
+        setFollowed(new Set());
+        return;
+      }
+      const data = await res.json();
+      console.log("Fetched following from backend:", data);
+      if (data.following) 
+        setFollowed(new Set(data.following));
+    })
+    .catch(err => console.error("Error fetching following list:", err))
+  }, [currentUser]);
 
   useEffect(() => {
     if (propAccessToken && propAccessToken !== accessToken) {
@@ -469,24 +493,25 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
                     const username = key.split(":")[1];
                     
                     // check to see if already following
-                    const isCurrentlyFollowing = followed.has(key)
+                    const isCurrentlyFollowing = followed.has(username)
 
                     setFollowed((prev) => {
                       const toggle = new Set(prev);
-                      isCurrentlyFollowing ? toggle.delete(key) : toggle.add(key);
+                      if (isCurrentlyFollowing) 
+                        toggle.delete(username); 
+                      else 
+                        {toggle.add(username)};
                       return toggle;
                     });
 
                     try {
-                      if (isCurrentlyFollowing) {await unfollowServer(username);}
-                      else {await followServer(username);}
+                      if (isCurrentlyFollowing) 
+                        await unfollowServer(username);
+                      else 
+                        await followServer(username);
                     } catch (err) {
                       console.error("follow toggle failed", err);
-                      setFollowed((prev) => {
-                        const toggle = new Set(prev);
-                        isCurrentlyFollowing ? toggle.delete(key) : toggle.add(key);
-                        return toggle;
-                      });
+                    
                     }
                   }}
                   style={{
@@ -494,12 +519,12 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
                     border: "1px solid #444",
                     borderRadius: 8,
                     padding: "4px 8px",
-                    color: followed.has(key) ? "#ff4d4d" : "#8e2dd2ff",
+                    color: followed.has(key.split(":")[1]) ? "#ff4d4d" : "#8e2dd2ff",
                     cursor: "pointer",
                     fontSize: 12,
                   }}
                 >
-                  {followed.has(key) ? "Unfollow" : "+ Follow"}
+                  {followed.has(key.split(":")[1]) ? "Unfollow" : "+ Follow"}
                 </button>
               )}
             </div>
