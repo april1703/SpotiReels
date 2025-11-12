@@ -797,7 +797,7 @@ app.post("/getRandomPosts", (request, response) => {
         } else {
             return response.status(200).json(SQLresults)
         }
-    }
+    })
 })
 
 //  HELPER FUNCTIONS
