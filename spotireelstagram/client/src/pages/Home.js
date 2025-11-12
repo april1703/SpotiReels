@@ -107,7 +107,11 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
               playlistId={openId}
               isOpen={!!openId}
               onClose={() => setOpenId(null)}
-              onPlay={(uri) => setTrackUri?.(uri)}
+              onPlay={(uri, queue) => {
+                // share the queue globally with the app
+                window.dispatchEvent(new CustomEvent('player:queue', { detail: { queue } }));
+                setTrackUri?.(uri);
+                }}
               />
               </Container>
               );
