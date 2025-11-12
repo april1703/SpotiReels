@@ -1,44 +1,47 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Search from './pages/Search';
-import {Sidebar, Player} from './pages/Sidebar';
+import { Sidebar, Player } from './pages/Sidebar';
 import useAuth from './pages/useAuth';
 import Settings from './pages/Settings';
 import Register from './pages/Register';
 import LikedSongs from './pages/LikedSongs';
 import CreatePlaylistModal from './pages/CreatePlaylistPopup';
 import './pages/theme.css';
-import { ThemeContext, ThemeProvider } from './pages/ThemeSwitch';
+import { ThemeProvider } from './pages/ThemeSwitch';
 import Reels from './pages/Reels';
 
-
-//APP.JS EXPLANATION
-// main kinda global app component
-// handles routing between Login, Home, Settings, and Search pages
-// trackURI's state is stored here (so it can get passed to the player for trackURI (song) data)
-// manages access token and track URI state
-// passes access token to Player component to enable music playback
-
+// main app: routing + global player state (trackUri + queue)
 export default function App() {
   const code = new URLSearchParams(window.location.search).get('code');
   const hookAccessToken = useAuth(code);
 
-  // fallsback to a consistent token so player doesn't disappear
-  const accessToken = hookAccessToken || (typeof window !== 'undefined' ? window.localStorage.getItem('accessToken') : null);
+  // fallback token so player doesn't disappear on refresh
+  const accessToken =
+    hookAccessToken ||
+    (typeof window !== 'undefined' ? window.localStorage.getItem('accessToken') : null);
 
-  // track pathname in state so SPA navigation (pushState) can update the UI seamlessly
+  // SPA path state so pushState updates the UI seamlessly
   const [path, setPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
-  const [trackUri, setTrackUri] = useState(null);
-  const [showCreate, setShowCreate] = useState(false)
 
+  // single selected track (clicked item)
+  const [trackUri, setTrackUri] = useState(null);
+
+  // NEW: a queue of URIs (e.g., rest of a playlist starting from clicked track)
+  const [trackQueue, setTrackQueue] = useState([]);
+
+  const [showCreate, setShowCreate] = useState(false);
+
+  // keep path in sync with history
   useEffect(() => {
     const onPop = () => setPath(window.location.pathname);
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
+  // listen for single-track play events fired from anywhere
   useEffect(() => {
     const onPlay = (e) => {
       const uri = e?.detail?.uri;
@@ -48,19 +51,31 @@ export default function App() {
     return () => window.removeEventListener('player:play', onPlay);
   }, []);
 
-  const handlePlay = (uri) => setTrackUri(uri);
+  // NEW: listen for a queue being provided (e.g., from PlaylistContentPopup)
+  useEffect(() => {
+    const onQueue = (e) => {
+      const q = e?.detail?.queue;
+      if (Array.isArray(q) && q.length) setTrackQueue(q);
+    };
+    window.addEventListener('player:queue', onQueue);
+    return () => window.removeEventListener('player:queue', onQueue);
+  }, []);
+
+  const handlePlay = (uri) => {
+    setTrackUri(uri);
+  };
 
   if (path === '/register') return <Register />;
 
-  // show Login only when no authorization has been made, which is used for Logout as well
+  // show Login only when no authorization has been made (also used for Logout)
   const showLogin = !accessToken && !code && (path === '/' || path === '/login');
   if (showLogin) return <Login />;
 
   const norm = path.toLowerCase();
-  const isLikedSongs = 
-    norm === '/likedsongs' || 
-    norm === '/liked-songs' || 
-    norm === '/likes' || 
+  const isLikedSongs =
+    norm === '/likedsongs' ||
+    norm === '/liked-songs' ||
+    norm === '/likes' ||
     norm === '/liked';
 
   let Content;
@@ -92,10 +107,11 @@ export default function App() {
             padding: 0,
             zIndex: 200,
             background: 'var(--bg)',
-            borderTop: '1px solid var(--border)'
+            borderTop: '1px solid var(--border)',
           }}
         >
-          <Player accessToken={accessToken} trackUri={trackUri} />
+          {/* pass both the single track and the queue */}
+          <Player accessToken={accessToken} trackUri={trackUri} trackQueue={trackQueue} />
         </div>
         <CreatePlaylistModal
           accessToken={accessToken}
