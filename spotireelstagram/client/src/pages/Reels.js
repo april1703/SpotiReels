@@ -169,6 +169,36 @@ export default function Reels({ accessToken, setTrackUri }) {
   const [followingSet, setFollowingSet] = useState(new Set());
   const [recs, setRecs] = useState([]);
 
+  // like/dislike
+  const [liked, setLiked] = useState(() => new Set());
+  const [disliked, setDisliked] = useState(() => new Set());
+
+  const toggleLike = (postId) => {
+    setLiked(prev => {
+        const next = new Set(prev);
+        if (next.has(postId)) next.delete(postId);
+        else next.add(postId);
+        return next;
+    });
+    setDisliked(prev => {
+        if (!prev.has(postId)) return prev;
+        const next = new Set(prev); next.delete(postId); return next;
+    });
+  };
+  
+  const toggleDislike = (postId) => {
+    setDisliked(prev => {
+        const next = new Set(prev);
+        if (next.has(postId)) next.delete(postId);
+        else next.add(postId);
+        return next;
+    });
+    setLiked(prev => {
+        if (!prev.has(postId)) return prev;
+        const next = new Set(prev); next.delete(postId); return next;
+    });
+  };
+
   // infinite scroll
   const sentinelRef = useRef(null);
   useEffect(() => {
@@ -369,7 +399,7 @@ useEffect(() => { loadFeed(); }, [loadFeed]);
 
   useEffect(() => {
     const who = user || "__guest__";
-    fetchRecommendedUsers({ username: who, followingSet, limit: 12 })
+    fetchRecommendedUsers({ username: who, followingSet, limit: 5 })
         .then(setRecs)
         .catch(() => setRecs([]));
   }, [user, followingSet]);
@@ -425,6 +455,30 @@ useEffect(() => { loadFeed(); }, [loadFeed]);
             {/* PUT OTHER ACTION BUTTONS HERE*/}
             <div className="rl-actions">
               <Pill onClick={() => openAddToPlaylist(post.track.uri)}>＋ Add to Playlist</Pill>
+            </div>
+
+            <div className="rl-actions">
+                <button
+                    className="rl-icon-btn like"
+                    aria-pressed={liked.has(post.id)}
+                    title={liked.has(post.id) ? "Unlike" : "Like"}
+                    onClick={() => toggleLike(post.id)}
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 21s-6.7-4.2-9.3-7.4C.6 10.4 1.2 6.9 4 5.4 6 4.3 8.5 4.9 10 6.6c1.5-1.7 4-2.3 6-1.2 2.9 1.5 3.5 5 1.3 8.2C18.7 16.8 12 21 12 21z"/>
+                    </svg>
+                </button>
+
+                <button
+                    className="rl-icon-btn dislike"
+                    aria-pressed={disliked.has(post.id)}
+                    title={disliked.has(post.id) ? "Remove dislike" : "Dislike"}
+                    onClick={() => toggleDislike(post.id)}
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M15 3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h4.6l-1 4.3c-.2.9.7 1.7 1.5 1.2l4.9-3.1A2 2 0 0 0 17 16V5a2 2 0 0 0-2-2zM20 5h-2v10h2a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/>
+                    </svg>
+                </button>
             </div>
 
             {/* caption */}
