@@ -179,7 +179,6 @@ export default function Settings() {
                         Manage Following
                     </button>
                     </Col>
-
                 </Row>
           
             <h4 className="mb-4" style={{color: "#8e2dd2ff"}}>Change Password</h4>
