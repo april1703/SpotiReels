@@ -69,6 +69,14 @@ export default function PlaylistModal({ accessToken, playlistId, isOpen, onClose
     }
   }
 
+  // build queue and handle track clicking
+  const uris = tracks.map(t => t.uri);
+  const handleSongClick = (clickedUri) => {
+    const start = uris.indexOf(clickedUri);
+    const queue = start >= 0 ? uris.slice(start) : [clickedUri];
+    onPlay?.(clickedUri, queue);  // pass both to parent
+  };
+
   if (!isOpen) return null;
 
   const cover = meta.images?.[0]?.url;
@@ -118,7 +126,7 @@ export default function PlaylistModal({ accessToken, playlistId, isOpen, onClose
               {tracks.map(t => (
                 <button
                   key={t.id}
-                  onClick={() => onPlay?.(t.uri)}
+                  onClick={() => handleSongClick(t.uri)}
                   style={trackRow}
                   title="Play"
                 >
