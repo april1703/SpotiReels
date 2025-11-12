@@ -2,31 +2,28 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import "./Reels.css";
 import AddToPlaylistPopup from "./AddToPlaylistPopup.jsx";
 
-/*local storage helpers (per-user bucket)*/
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
 function getCurrentUser() {
-    const fromStores = (k) =>
-        window.localStorage.getItem(k) ?? window.sessionStorage.getItem(k);
-    const u =
-        fromStores("currentUser") ||
-        fromStores("username") ||
-        fromStores("user") ||
-        "";
-    return u.trim();
+  const token = getCookie("token");
+  if (!token) return null;
+  const payload = JSON.parse(atob(token.split(".")[1]));
+  return payload.username;
 }
-function keyFor(user) {
-  return `reels:posts:${user}`;
+
+// Normalize a Spotify track into a plain 22-char ID (safe for backend)
+function toTrackId(x) {
+  if (!x) return null;
+  const s = typeof x === "string" ? x : x.uri || "";
+  if (s.startsWith("spotify:track:")) return s.split(":").pop();
+  const m = s.match(/track\/([A-Za-z0-9]{22})|^([A-Za-z0-9]{22})$/);
+  return m ? (m[1] || m[2]) : null;
 }
-function loadPosts(user) {
-  try {
-    const raw = window.localStorage.getItem(keyFor(user));
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-function savePosts(user, posts) {
-  window.localStorage.setItem(keyFor(user), JSON.stringify(posts));
-}
+
 
 /**small UI bits*/
 function Field({ label, children }) {
@@ -163,7 +160,7 @@ export default function Reels({ accessToken, setTrackUri }) {
   const [caption, setCaption] = useState("");
 
   // feed state
-  const [allPosts, setAllPosts] = useState(() => loadPosts(user));
+  const [allPosts, setAllPosts] = useState([]);
   const [visibleCount, setVisibleCount] = useState(5); // “infinite” page size
   const [openAddToPl, setOpenAddToPl] = useState(false);
   const [addToPlUri, setAddToPlUri] = useState(null);
@@ -184,11 +181,73 @@ export default function Reels({ accessToken, setTrackUri }) {
     io.observe(el);
     return () => io.disconnect();
   }, [allPosts.length]);
+  
+  const loadFeed = useCallback(async () => {
+    const username = getCurrentUser();
+    if (!username) { setAllPosts([]); return; }
 
-  // persist when posts change
-  useEffect(() => {
-    savePosts(user, allPosts);
-  }, [user, allPosts]);
+  // 1) fetch my posts + following posts
+  const [mine, following] = await Promise.all([
+    fetch("http://localhost:3001/getMyPosts", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username })
+    }).then(r => r.ok ? r.json() : []),
+    fetch("http://localhost:3001/getFollowingPost", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username })
+    }).then(r => r.ok ? r.json() : []),
+  ]);
+
+  const rows = [...mine, ...following];
+
+  // 2) collect unique Spotify IDs from row.song (can be URI/URL/ID)
+  const getId = (song) => {
+    if (!song) return null;
+    if (song.startsWith("spotify:track:")) return song.split(":").pop();
+    const m = song.match(/track\/([A-Za-z0-9]+)|^([A-Za-z0-9]{22})$/);
+    return m ? (m[1] || m[2]) : null;
+  };
+  const ids = Array.from(new Set(rows.map(r => getId(r.song)).filter(Boolean)));
+
+  // 3) enrich via Spotify /tracks in batches of 50
+  const idToMeta = new Map();
+  if (headers && ids.length) {
+    for (let i = 0; i < ids.length; i += 50) {
+      const chunk = ids.slice(i, i + 50);
+      const url = new URL("https://api.spotify.com/v1/tracks");
+      url.searchParams.set("ids", chunk.join(","));
+      const res = await fetch(url, { headers });
+      const data = await res.json().catch(() => ({}));
+      for (const t of (data.tracks || [])) {
+        idToMeta.set(t.id, {
+          uri: t.uri,
+          title: t.name,
+          artists: (t.artists || []).map(a => a.name).join(", "),
+          img: t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || ""
+        });
+      }
+    }
+  }
+
+  // 4) map DB rows -> UI posts and sort by time desc
+  const mapped = rows.map(r => {
+    const id = getId(r.song);
+    const meta = id ? idToMeta.get(id) : null;
+    return {
+      id: r.post_ID,
+      user: r.username,
+      track: meta || { uri: r.song, title: r.song, artists: "", img: "" },
+      caption: r.body || "",
+      comments: [],
+      ts: Date.parse(r.time_stamp) || Date.now()
+    };
+  }).sort((a, b) => b.ts - a.ts);
+
+  setAllPosts(mapped);
+}, [headers]);
+
+useEffect(() => { loadFeed(); }, [loadFeed]);
+
 
   // basic search for the composer
   const doSearch = useCallback(async () => {
@@ -224,20 +283,29 @@ export default function Reels({ accessToken, setTrackUri }) {
     setCaption("");
   };
 
-  // create a new post (local only)
-  const createPost = () => {
-    if (!selectedTrack) return;
-    const post = {
-      id: `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      user,
-      track: selectedTrack, // {uri,title,artists,img}
-      caption: caption.slice(0, 280),
-      comments: [],
-      ts: Date.now(),
-    };
-    setAllPosts((p) => [post, ...p]);
-    resetComposer();
-  };
+  // create a new post (BACKEND)
+  const createPost = async () => {
+  if (!selectedTrack) return;
+  const username = getCurrentUser();
+  if (!username) return alert("Please log in again.");
+
+  const trackId = toTrackId(selectedTrack);
+  if (!trackId) return alert("Could not extract track ID from selection.");
+
+  const post_body = caption.slice(0, 280);
+
+  const r = await fetch("http://localhost:3001/createPost", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, song_title: trackId, post_body })
+  });
+  if (!r.ok) {
+    const t = await r.text().catch(() => "");
+    return alert(`Failed to post: ${r.status} ${t}`);
+  }
+  await loadFeed();
+  resetComposer();
+};
 
   const addComment = (id, text) => {
     setAllPosts((prev) =>
