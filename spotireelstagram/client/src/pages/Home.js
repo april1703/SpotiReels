@@ -1,6 +1,5 @@
 import { Container } from 'react-bootstrap'
 import { useState, useEffect, useMemo } from 'react'
-import { FaMinus, FaTimes } from "react-icons/fa"
 import "./Home.css";
 import PlaylistContentPopup from "./PlaylistContentPopup.jsx";
 
@@ -29,9 +28,6 @@ export default function Home({ accessToken, setTrackUri }) { // <— add setTrac
   const headers = useMemo(() => (
     accessToken ? { Authorization: `Bearer ${accessToken}` } : null
   ), [accessToken]);
-
-  const close = () => window.close();
-  const minimize = () => { document.body.style.display = "none"; };
 
   useEffect(() => {
     if (!headers) return;

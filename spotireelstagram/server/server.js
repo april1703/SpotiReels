@@ -532,7 +532,8 @@ app.post("/getFollowing", (request, response) => {
         } else if (SQLresults.length === 0) {
             return response.status(404).send(`Cannot find following for user ${username}. Is ${username} following anyone?`);
         } else {
-            return response.status(200).json(SQLresults);
+            const followingList = SQLresults.map(r => r.user_following);
+            return response.status(200).json({following: followingList})
         }
     })
 })

@@ -114,12 +114,6 @@ export default function Settings() {
             }))
                                 
         };
-    
-    // THEME TOGGLE
-    const handleThemeChange = (nextTheme) => {
-        setTheme(nextTheme);
-        setSettings((prev) => ({ ...prev, theme: nextTheme }));
-    };
 
     useEffect(() => {
         const storedUsername =

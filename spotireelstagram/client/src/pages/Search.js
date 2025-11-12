@@ -142,7 +142,7 @@ export default function Search({ accessToken: propAccessToken, setTrackUri }) {
         return;
       }
       const data = await res.json();
-      console.log("Fetched following from backend:", data);
+      console.log("Fetched following from backend:", data)
       if (data.following) 
         setFollowed(new Set(data.following));
     })
