@@ -4,8 +4,14 @@ import AddToPlaylistPopup from "./AddToPlaylistPopup.jsx";
 
 /*local storage helpers (per-user bucket)*/
 function getCurrentUser() {
-  //store this on successful Login
-  return window.localStorage.getItem("currentUser");
+    const fromStores = (k) =>
+        window.localStorage.getItem(k) ?? window.sessionStorage.getItem(k);
+    const u =
+        fromStores("currentUser") ||
+        fromStores("username") ||
+        fromStores("user") ||
+        "";
+    return u.trim();
 }
 function keyFor(user) {
   return `reels:posts:${user}`;
@@ -33,12 +39,115 @@ function Field({ label, children }) {
 }
 
 /**pill button (USE THIS FOR POST INTERACTIONS)*/
-function Pill({ children, onClick }) {
-  return <button className="rl-pill" onClick={onClick}>{children}</button>;
+function Pill({ children, className = "", ...props }) {
+  return (
+    <button className={`rl-pill ${className}`} {...props}>
+        {children}
+    </button>
+  );
+}
+
+async function apiFollow(username, following_username) {
+    const r = await fetch("http://localhost:3001/addFollowing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, following_username })
+    });
+    if (!r.ok) throw new Error(await r.text());
+}
+
+async function apiUnfollow(username, following_username) {
+    const r = await fetch("http://localhost:3001/removeFollowing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, following_username })
+    });
+    if (!r.ok) throw new Error(await r.text());
+}
+
+async function fetchWhoIFollow(username) {
+    try {
+        const r = await fetch("http://localhost:3001/getFollowing", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username })
+        });
+        if (!r.ok) return new Set();
+        const rows = await r.json();
+        return new Set(rows.map(r => r.user_following));
+    } catch { return new Set(); }
+}
+
+async function fetchRecommendedUsers({ username, followingSet = new Set(), limit = 12 }) {
+    const meLC = (username || "").toLowerCase();
+    const followingLC = new Set([...followingSet].map(s => s.toLowerCase()));
+
+    const FALLBACK = [
+        {username: "mixmaster", displayName: "Mix Master" },
+        {username: "lofi_luna", displayName: "Lofi Luna" },
+        {username: "vinylwave", displayName: "VinylWave" },
+        {username: "beatsbyjay", displayName: "Beats by Jay" },
+        {username: "synthsoda", displayName: "Synth Soda" },
+        {username: "indieivy", displayName: "Indie Ivy" },
+    ];
+    const fromPool = () => {
+        const out = [];
+        for (const u of FALLBACK) {
+            const uLC = u.username.toLowerCase();
+            if (uLC === meLC || followingLC.has(uLC)) continue;
+            out.push(u);
+            if (out.length >= limit) break;
+        }
+        return out;
+    };
+
+    try {
+        const r = await fetch(`http://localhost:3001/recommendUsers?username=${encodeURIComponent(username)}&limit=${limit}`);
+        if (!r.ok) return fromPool();
+        const rows = await r.json();
+        const filtered = rows
+            .map(u => ({ username: String(u.username), displayName: u.displayName || u.username }))
+            .filter(u => {
+                const uLC = u.username.toLowerCase();
+                return uLC && uLC !== meLC && !followingLC.has(uLC);
+            })
+            .slice(0, limit);
+        return filtered.length ? filtered : fromPool();
+    } catch {
+        return fromPool();
+    }
+}
+
+function RecCard({ u, isFollowing, onToggle }) {
+    return (
+        <div className="rl-rec-card">
+            <div className="rl-rec-row">
+                <div className="rl-rec-avatar">{(u.displayName || u.username)[0]?.toUpperCase()}</div>
+                <div className="rl-rec-meta">
+                    <div className="rl-rec-name">{u.displayName || u.username}</div>
+                    <div className="rl-rec-handle">@{u.username}</div>
+                </div>
+            </div>
+            <Pill
+                className={isFollowing ? "is-following" : ""}
+                onClick={() => onToggle(u.username, isFollowing)}
+                aria-pressed={isFollowing}
+            >
+                {isFollowing ? "Following" : "Follow"}
+            </Pill>
+        </div>
+    );
 }
 
 export default function Reels({ accessToken, setTrackUri }) {
-  const user = getCurrentUser();
+  const [user, setUser] = useState(getCurrentUser());
+
+  useEffect(() => {
+    setUser(getCurrentUser());
+    const onStorage = () => setUser(getCurrentUser());
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   // spotify calls
   const headers = useMemo(
@@ -58,6 +167,10 @@ export default function Reels({ accessToken, setTrackUri }) {
   const [visibleCount, setVisibleCount] = useState(5); // “infinite” page size
   const [openAddToPl, setOpenAddToPl] = useState(false);
   const [addToPlUri, setAddToPlUri] = useState(null);
+
+  // follow + recommendations state
+  const [followingSet, setFollowingSet] = useState(new Set());
+  const [recs, setRecs] = useState([]);
 
   // infinite scroll
   const sentinelRef = useRef(null);
@@ -141,6 +254,34 @@ export default function Reels({ accessToken, setTrackUri }) {
 
   const playTrack = (uri) => setTrackUri?.(uri);
 
+  useEffect(() => {
+    if (!user) { setFollowingSet(new Set()); return; }
+    fetchWhoIFollow(user).then(setFollowingSet).catch(() => setFollowingSet(new Set()));
+  }, [user]);
+
+  useEffect(() => {
+    const who = user || "__guest__";
+    fetchRecommendedUsers({ username: who, followingSet, limit: 12 })
+        .then(setRecs)
+        .catch(() => setRecs([]));
+  }, [user, followingSet]);
+
+  const toggleFollow = async (target, currentlyFollowing) => {
+    setFollowingSet(prev => {
+        const next = new Set(prev);
+        if (currentlyFollowing) next.delete(target); else next.add(target);
+        return next;
+    });
+    try { if (currentlyFollowing) await apiUnfollow(user, target); else await apiFollow(user, target); }
+    catch {
+        setFollowingSet(prev => {
+            const next = new Set(prev);
+            if (currentlyFollowing) next.add(target); else next.delete(target);
+            return next;
+        });
+    }
+  };
+
   const visiblePosts = allPosts.slice(0, visibleCount);
 
   return (
@@ -194,6 +335,29 @@ export default function Reels({ accessToken, setTrackUri }) {
         ))}
         {/* sentinel for infinite scroll */}
         <div ref={sentinelRef} style={{ height: 1 }} />
+
+        {visibleCount >= allPosts.length && (
+            <section className="rl-rec-wrap">
+                <h3 className="rl-rec-title">Recommended accounts to follow</h3>
+
+                {recs.length === 0 ? (
+                    <div className="rl-rec-empty">No suggestions right now - check back soon.</div>
+                ) : (
+                    <div className="rl-rec-grid">
+                        {recs.map((u) => (
+                            <RecCard
+                                key={u.username}
+                                u={u}
+                                isFollowing={followingSet.has(u.username)}
+                                onToggle={toggleFollow}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                <div className="rl-rec-sub">Suggestions are based on popular posters & your activity.</div>
+            </section>
+        )}
       </div>
 
       {/* POST CREATOR */}

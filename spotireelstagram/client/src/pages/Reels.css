@@ -63,3 +63,71 @@
 .rl-picked-title { font-weight:700; font-size:14px; }
 .rl-picked-artist { color:#bdbdbd; font-size:12px; }
 .rl-x { background:transparent; border:none; color:#bbb; font-size:20px; cursor:pointer; line-height:1; }
+
+.rl-rec-wrap {
+  margin: 24px 0 48px;
+  padding: 16px;
+  border: 1px solid #222;
+  border-radius: 12px;
+  background: #0f0f10;
+}
+
+.rl-rec-title {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.rl-rec-sub {
+  margin-top: 10px;
+  opacity: .75;
+  font-size: .9rem;
+}
+
+.rl-rec-empty {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.rl-rec-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 12px;
+  background: #111113;
+}
+
+.rl-rec-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rl-rec-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: linear-gradient(135deg, #8e2dd2, #b46efe);
+  color: #fff;
+}
+
+.rl-rec-name {
+  font-weight: 700;
+}
+
+.rl-rec-handle {
+  opacity: .75;
+  font-size: .9rem;
+}
+
+.rl-pill.is-following {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: #fff;
+}
