@@ -4,9 +4,12 @@ import AddToPlaylistPopup from "./AddToPlaylistPopup.jsx";
 
 /*local storage helpers (per-user bucket)*/
 function getCurrentUser() {
+    const fromStores = (k) =>
+        window.localStorage.getItem(k) ?? window.sessionStorage.getItem(k);
     const u =
-        window.localStorage.getItem("currentUser") ||
-        window.localStorage.getItem("username") ||
+        fromStores("currentUser") ||
+        fromStores("username") ||
+        fromStores("user") ||
         "";
     return u.trim();
 }
@@ -36,8 +39,12 @@ function Field({ label, children }) {
 }
 
 /**pill button (USE THIS FOR POST INTERACTIONS)*/
-function Pill({ children, onClick }) {
-  return <button className="rl-pill" onClick={onClick}>{children}</button>;
+function Pill({ children, className = "", ...props }) {
+  return (
+    <button className={`rl-pill ${className}`} {...props}>
+        {children}
+    </button>
+  );
 }
 
 async function apiFollow(username, following_username) {
@@ -133,7 +140,14 @@ function RecCard({ u, isFollowing, onToggle }) {
 }
 
 export default function Reels({ accessToken, setTrackUri }) {
-  const user = getCurrentUser();
+  const [user, setUser] = useState(getCurrentUser());
+
+  useEffect(() => {
+    setUser(getCurrentUser());
+    const onStorage = () => setUser(getCurrentUser());
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   // spotify calls
   const headers = useMemo(

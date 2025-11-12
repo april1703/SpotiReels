@@ -35,7 +35,20 @@ const SQL_REQUESTS = {
     changeIsDarkMode: "UPDATE users SET isDarkMode = ? WHERE username = ?",
     changeExplicit: "UPDATE users SET isExplicit = ? WHERE username = ?",
     search: "SELECT username FROM users WHERE username LIKE ?",
-    getSimilar: "SELECT u.username FROM users u WHERE LOWER(u.username) <> ? AND NOT EXISTS ( 1 FROM following f WHERE LOWER(f.username) = ? AND LOWER(f.user_following) = LOWER(u.username)) ORDER BY RAND() LIMIT ?"
+    // plz do not touch getSimilar, if messed with it will show only dummy data
+    getSimilar: `
+        SELECT u.username
+        FROM users u
+        WHERE LOWER(u.username) <> LOWER(?)
+            AND NOT EXISTS (
+                SELECT 1
+                FROM following f
+                WHERE LOWER(f.username) = LOWER(?)
+                    AND LOWER(f.user_following) = LOWER(u.username)
+            )
+        ORDER BY RAND()
+        LIMIT ?
+    `,
   },
 
   following: {
@@ -520,21 +533,27 @@ app.post("/getFollowing", (request, response) => {
     })
 })
 
-app.get("/recommendUsers", (request, response) => {
-    let {user, limit} = request.body
-    // let limit = Math.max(1, Math.min(24, Number(req.query.limit) || 12));
-    if (!user) return response.status(400).send("Missing username");
-    if (checkRegex([user])){
-        return response.status(403).send("Invalid Characters in request body: Access denied.")
+app.get("/recommendUsers", (req, res) => {
+    const username = String(req.query.username || "").trim();
+    const limit = Math.max(1, Math.min(24, Number(req.query.limit) || 12));
+    if (!username) return res.status(400).send("Missing username");
+
+    if (checkRegex([username])) {
+        return res.status(403).send("Invalid Characters in request body: Access denied.");
     }
-    Connection.query(SQL_REQUESTS.user.getSimilar, [user, user, limit], (SQLerror, SQLresults) => {
-        if (SQLerror) {
-            return response.status(500).send(`Database error: ${err.message}`);
-        } 
-        else {
-        response.status(200).json((rows || []).map(r => ({ username: r.username })));
+
+    Connection.query(
+        SQL_REQUESTS.user.getSimilar,
+        [username, username, limit],
+        (SQLerror, SQLresults) => {
+            if (SQLerror) {
+                return res.status(500).send(`Database error: ${SQLerror.message}`);
+            }
+            return res
+                .status(200)
+                .json((SQLresults || []).map(r => ({ username: r.username })));
         }
-    });
+    );
 });
 
 // ADD TO PLAYLIST: takes three strings, returns network status and message
