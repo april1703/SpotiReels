@@ -172,31 +172,107 @@ export default function Reels({ accessToken, setTrackUri }) {
   // like/dislike
   const [liked, setLiked] = useState(() => new Set());
   const [disliked, setDisliked] = useState(() => new Set());
+  const [likeCounts, setLikeCounts] = useState({});
+  const [likedByMe, setLikedByMe] = useState(new Set());
 
-  const toggleLike = (postId) => {
+  const toggleLike = async (postId) => {
+    const username = getCurrentUser();
+    if (!username) return alert("Please lig in again.");
+
+    const wasLiked = likedByMe.has(postId);
+    const nextLiked = !wasLiked;
+
     setLiked(prev => {
-        const next = new Set(prev);
-        if (next.has(postId)) next.delete(postId);
-        else next.add(postId);
-        return next;
+        const s = new Set(prev);
+        if (nextLiked) s.add(postId); else s.delete(postId);
+        return s;
     });
+    setLikedByMe(prev => {
+        const s = new Set(prev);
+        if (nextLiked) s.add(postId); else s.delete(postId);
+        return s;
+    })
+
     setDisliked(prev => {
         if (!prev.has(postId)) return prev;
-        const next = new Set(prev); next.delete(postId); return next;
+        const s = new Set(prev); s.delete(postId); return s;
     });
+
+    setLikeCounts(prev => ({
+        ...prev,
+        [postId]: Math.max(0, (prev[postId] || 0) + (nextLiked ? 1 : -1))
+    }));
+
+    try {
+        await fetch("http://localhost:3001/post/react", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, post_ID: postId, like: nextLiked })
+        });
+    } catch (e) {
+        setLiked(prev => {
+            const s = new Set(prev);
+            if (wasLiked) s.add(postId); else s.delete(postId);
+            return s;
+        });
+        setLikedByMe(prev => {
+            const s = new Set(prev);
+            if (wasLiked) s.add(postId); else s.delete(postId);
+            return s;
+        });
+        setLikeCounts(prev => ({
+            ...prev,
+            [postId]: Math.max(0, (prev[postId] || 0) + (wasLiked ? 1 : -1))
+        }));
+        alert("Network error while liking. Reverted.");
+    }
   };
   
-  const toggleDislike = (postId) => {
+  const toggleDislike = async (postId) => {
+    const username = getCurrentUser();
+
+    const wasDisliked = disliked.has(postId);
+    const nextDisliked = !wasDisliked;
+
     setDisliked(prev => {
-        const next = new Set(prev);
-        if (next.has(postId)) next.delete(postId);
-        else next.add(postId);
-        return next;
+        const s = new Set(prev);
+        if (nextDisliked) s.add(postId); else s.delete(postId);
+        return s;
     });
+
     setLiked(prev => {
         if (!prev.has(postId)) return prev;
         const next = new Set(prev); next.delete(postId); return next;
     });
+
+    if (nextDisliked && (liked.has(postId) ||  likedByMe.has(postId))) {
+        setLiked(prev => {
+            if (!prev.has(postId)) return prev;
+            const s = new Set(prev);
+            s.delete(postId);
+            return s;
+        });
+        setLikedByMe(prev => {
+            if (!prev.has(postId)) return prev;
+            const s = new Set(prev);
+            s.delete(postId);
+            return s;
+        });
+        setLikeCounts(prev => ({
+            ...prev,
+            [postId]: Math.max(0, (prev[postId] || 0) - 1)
+        }));
+        
+        try {
+            if (username) {
+                await fetch("http://localhost:3001/post/react", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, post_ID: postId, like: false })
+                });
+            }
+        } catch {}
+    }
   };
 
   // infinite scroll
@@ -296,6 +372,27 @@ export default function Reels({ accessToken, setTrackUri }) {
   );
 
   setAllPosts(withComments);
+
+  try {
+    const username = getCurrentUser();
+    const ids = withComments.map(p => p.id);
+    const r = await fetch("http://localhost:3001/post/reactions-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, post_IDs: ids })
+    });
+    if (r.ok) {
+        const { counts = {}, likedByMe: mine = {} } = await r.json();
+        setLikeCounts(counts);
+        setLikedByMe(new Set(Object.keys(mine)));
+    } else {
+        setLikeCounts({});
+        setLikedByMe(new Set());
+    }
+  } catch {
+    setLikeCounts({});
+    setLikedByMe(new Set());
+  }
 }, [headers]);
 
 useEffect(() => { loadFeed(); }, [loadFeed]);
@@ -460,18 +557,21 @@ useEffect(() => { loadFeed(); }, [loadFeed]);
             <div className="rl-actions">
                 <button
                     className="rl-icon-btn like"
-                    aria-pressed={liked.has(post.id)}
-                    title={liked.has(post.id) ? "Unlike" : "Like"}
+                    aria-pressed={liked.has(post.id) || likedByMe.has(post.id)}
+                    disabled={disliked.has(post.id)}
+                    title={(liked.has(post.id) || likedByMe.has(post.id)) ? "Unlike" : "Like"}
                     onClick={() => toggleLike(post.id)}
                 >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 21s-6.7-4.2-9.3-7.4C.6 10.4 1.2 6.9 4 5.4 6 4.3 8.5 4.9 10 6.6c1.5-1.7 4-2.3 6-1.2 2.9 1.5 3.5 5 1.3 8.2C18.7 16.8 12 21 12 21z"/>
                     </svg>
+                    <span className="rl-count">{likeCounts[post.id] ?? 0}</span>
                 </button>
 
                 <button
                     className="rl-icon-btn dislike"
                     aria-pressed={disliked.has(post.id)}
+                    disabled={liked.has(post.id) || likedByMe.has(post.id)}
                     title={disliked.has(post.id) ? "Remove dislike" : "Dislike"}
                     onClick={() => toggleDislike(post.id)}
                 >

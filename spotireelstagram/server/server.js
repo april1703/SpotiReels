@@ -782,6 +782,60 @@ app.post("/getFollowingPost", (request, response) => {
     })   
 })
 
+// COUNTS PER POST
+app.post("/post/reactions-status", (req, res) => {
+    const { username, post_IDs = [] } = req.body || {};
+    if (!Array.isArray(post_IDs) || post_IDs.length === 0) {
+        return res.status(400).json({ error: "Missing post_IDs" });
+    }
+    if (checkRegex([username, ...post_IDs])) {
+        return res.status(403).send("Invalid characters in request body: Access denied.");
+    }
+
+    const countsSql = `SELECT post_ID, COUNT(*) AS cnt FROM reactions WHERE post_ID IN (?) GROUP BY post_ID`;
+    const likedSql = `SELECT post_ID FROM reactions WHERE username = ? AND post_ID IN (?)`;
+
+    Connection.query(countsSql, [post_IDs], (err1, rows1) => {
+        if (err1) return res.status(500).json({ error: `Database error: ${err1.message}` });
+
+        Connection.query(likedSql, [username, post_IDs], (err2, rows2) => {
+            if (err2) return res.status(500).json({ error: `Database error: ${err2.message}` });
+
+            const counts = {};
+            for (const r of rows1 || []) counts[r.post_ID] = Number(r.cnt) || 0;
+
+            const likedByMe = {};
+            for (const r of rows2 || []) likedByMe[r.post_ID] = true;
+
+            return res.status(200).json({ counts, likedByMe });
+        });
+    });
+});
+
+app.post("/post/react", (req, res) => {
+    const { username, post_ID, like } = req.body || {};
+    if (!username || !post_ID || typeof like !== "boolean") {
+        return res.status(400).json({ error: "Missing username, post_ID or like flag"});
+    }
+    if (checkRegex([username, post_ID])) {
+        return res.status(403).send("Invalid characters in request body: Access denied.");
+    }
+
+    if (like) {
+        Connection.query(SQL_REQUESTS.reactions.add, [post_ID, username], (e) => {
+            if (e && e.errno !== 1062) {
+                return res.status(500).json({ error: `Database error: ${e.message}` });
+            }
+            return res.status(200).json({ ok: true, liked: true });
+        });
+    } else {
+        Connection.query(SQL_REQUESTS.reactions.remove, [post_ID, username], (e) => {
+            if (e) return res.status(500).json({ error: `Database error: ${e.message}` });
+            return res.status(200).json({ ook: true, liked: false });
+        });
+    }
+});
+
 //  HELPER FUNCTIONS
 // REGEX CHECK: takes an array, returns a boolean
 const SQL_REGEX = /["':;(){}|\/\\]/;

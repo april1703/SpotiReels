@@ -137,11 +137,12 @@
   --bg: #151515;
   --border: #2a2a2a;
 
-  width: 38px;
-  height: 38px;
+  width: 56px;
+  height: 56px;
   display: grid;
   place-items: center;
   border-radius: 999px;
+  border-width: 1.5px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: #bfbfbf;
@@ -151,8 +152,8 @@
 }
 
 .rl-icon-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   fill: currentColor;
 }
 
@@ -192,6 +193,6 @@
 
 .rl-actions {
   display: flex;
-  gap: 10px;
+  gap: 14px;
   padding: 10px 12px;
 }
