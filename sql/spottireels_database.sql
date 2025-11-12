@@ -65,3 +65,14 @@ CREATE TABLE reactions (
     FOREIGN KEY (username) REFERENCES users(username),
     FOREIGN KEY (post_ID) REFERENCES posts(post_id)
 )
+
+-- COMMENTS TABLE (new)
+CREATE TABLE comments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_ID CHAR(36) NOT NULL,
+  username VARCHAR(50) NOT NULL,
+  body TEXT NOT NULL,
+  time_stamp VARCHAR(256) NOT NULL,
+  FOREIGN KEY (post_ID) REFERENCES posts(post_ID),
+  FOREIGN KEY (username) REFERENCES users(username)
+);

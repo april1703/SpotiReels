@@ -73,8 +73,8 @@ const SQL_REQUESTS = {
     remove: "DELETE FROM posts WHERE username = ? AND post_ID = ?",
     get_user: "SELECT * FROM posts WHERE username = ?",
     get_following: "SELECT p.* FROM posts p JOIN following f ON f.user_following = p.username WHERE f.username = ? ORDER BY p.time_stamp DESC;",
-    add_comment: "INSERT INTO comments (post_ID, username, body, timestamp) VALUES (?, ?, ?, ?);",
-    get_comments: "SELECT * FROM posts WHERE post_ID = ? ORDER BY timestamp;"
+    add_comment: "INSERT INTO comments (post_ID, username, body, time_stamp) VALUES (?, ?, ?, ?);",
+    get_comments: "SELECT username, body, time_stamp FROM comments WHERE post_ID = ? ORDER BY time_stamp ASC;"
   },
   reactions: {
     add: "INSERT INTO reactions (post_ID, username) VALUES (?, ?)",
@@ -532,7 +532,8 @@ app.post("/getFollowing", (request, response) => {
         } else if (SQLresults.length === 0) {
             return response.status(404).send(`Cannot find following for user ${username}. Is ${username} following anyone?`);
         } else {
-            return response.status(200).json(SQLresults);
+            const followingList = SQLresults.map(r => r.user_following);
+            return response.status(200).json({following: followingList})
         }
     })
 })
@@ -734,11 +735,11 @@ app.post("/createPost", (request, response) => {
 
 // CREATE COMMENT: takes 3 strings, returns a status and a message
 app.post("/createComment", (request, response) => {
-    let {username, post_ID, body} = request.body
+    let {username, post_ID, body} = request.body;
     if(checkRegex([username, post_ID])){
         return response.status(403).send("Invalid characters in username/post ID: Access denied.")
     }
-    let time_stamp = new Date().toISOString()
+    const time_stamp = new Date().toISOString();
     Connection.query(SQL_REQUESTS.post.add_comment, [post_ID, username, body, time_stamp], (SQLerror, SQLresults) => {
         if(SQLerror) {
             return response.status(500).send(`Database error: ${SQLerror.message}`)
@@ -751,7 +752,7 @@ app.post("/createComment", (request, response) => {
 
 // GET POST COMMENTS: takes a string and returns a status, a message, and, on 200, a JSON body
 app.post("/getComment", (request, response) => {
-    let {post_ID} = request.body
+    const { post_ID } = request.body;
     if(checkRegex([post_ID])) {
         return response.status(403).send("Invalid characters in request body: Access denied.")
     }

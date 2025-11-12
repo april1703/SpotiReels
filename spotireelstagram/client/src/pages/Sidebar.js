@@ -17,7 +17,7 @@ function Player({ accessToken, trackUri }) {
   // control 'play' so selecting a new track starts play IMMEDIATELY regardles of player state
   const [play, setPlay] = useState(false);
 
-  const hasTrack = useMemo(() => !!trackUri, [trackUri]);
+  useMemo(() => !!trackUri, [trackUri]);
 
   // when a new track is selected, ensure playback starts
   useEffect(() => {
