@@ -73,6 +73,8 @@ const SQL_REQUESTS = {
     remove: "DELETE FROM posts WHERE username = ? AND post_ID = ?",
     get_user: "SELECT * FROM posts WHERE username = ?",
     get_following: "SELECT p.* FROM posts p JOIN following f ON f.user_following = p.username WHERE f.username = ? ORDER BY p.time_stamp DESC;",
+    add_comment: "INSERT INTO comments (post_ID, username, body, timestamp) VALUES (?, ?, ?, ?);",
+    get_comments: "SELECT * FROM posts WHERE post_ID = ? ORDER BY timestamp;"
   },
   reactions: {
     add: "INSERT INTO reactions (post_ID, username) VALUES (?, ?)",
@@ -713,7 +715,7 @@ app.post("/searchUsers",(request, response) => {
     })
 }) 
 
-// CREATE POST: 
+// CREATE POST: takes 3 strings, returns a status and a message
 app.post("/createPost", (request, response) => {
     let {username, song_title, post_body} = request.body;
     if(checkRegex([username, song_title])) {
@@ -730,6 +732,39 @@ app.post("/createPost", (request, response) => {
     })
 })
 
+// CREATE COMMENT: takes 3 strings, returns a status and a message
+app.post("/createComment", (request, response) => {
+    let {username, post_ID, body} = request.body
+    if(checkRegex([username, post_ID])){
+        return response.status(403).send("Invalid characters in username/post ID: Access denied.")
+    }
+    let time_stamp = new Date().toISOString()
+    Connection.query(SQL_REQUESTS.post.add_comment, [post_ID, username, body, time_stamp], (SQLerror, SQLresults) => {
+        if(SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        }
+        else {
+            return response.status(200).send("Comment success!")
+        }
+    })
+})
+
+// GET POST COMMENTS: takes a string and returns a status, a message, and, on 200, a JSON body
+app.post("/getComment", (request, response) => {
+    let {post_ID} = request.body
+    if(checkRegex([post_ID])) {
+        return response.status(403).send("Invalid characters in request body: Access denied.")
+    }
+    Connection.query(SQL_REQUESTS.post.get_comments, [post_ID], (SQLerror, SQLresults) => {
+        if(SQLerror) {
+            return response.status(500).send(`Database error: ${SQLerror.message}`)
+        } else {
+            return response.status(200).json(SQLresults)
+        }
+    })
+})
+
+// GET FOLLOWING'S POSTS
 app.post("/getFollowingPost", (request, response) => {
     let {username} = request.body;
     if(checkRegex([username])) {
