@@ -530,11 +530,24 @@ app.post("/getFollowing", (request, response) => {
         } else if (SQLresults.length === 0) {
             return response.status(404).send(`Cannot find following for user ${username}. Is ${username} following anyone?`);
         } else {
-            const followingList = SQLresults.map(r => r.user_following);
-            return response.status(200).json({following: followingList})
+            return response.status(200).json(SQLresults);
         }
     })
 })
+
+// GET MY POSTS: returns only the caller's posts
+app.post("/getMyPosts", (request, response) => {
+  const { username } = request.body;
+  if (!username) return response.status(400).send("Missing username");
+  if (checkRegex([username])) {
+    return response.status(403).send("Invalid characters in request body: Access denied.");
+  }
+
+  Connection.query(SQL_REQUESTS.post.get_user, [username], (err, rows) => {
+    if (err) return response.status(500).send(`Database error: ${err.message}`);
+    return response.status(200).json(rows || []);
+  });
+});
 
 app.get("/recommendUsers", (req, res) => {
     const username = String(req.query.username || "").trim();
